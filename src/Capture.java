@@ -150,8 +150,11 @@ public strictfp class Capture {
 			final String indexPropertyName = "device-index";
 	
 			double patchSize = context.getAgent().world().patchSize();
-		//	float width = (float) (args[0].getDoubleValue() * patchSize);
-		//	float height = (float) (args[1].getDoubleValue() * patchSize);
+			width = (float) (args[0].getDoubleValue() * patchSize);
+			height = (float) (args[1].getDoubleValue() * patchSize);
+			
+			System.out.println("width: " + width);
+			System.out.println("height: " + height);
 
 			cameraPipeline = new Pipeline("camera-capture");
 
@@ -167,15 +170,13 @@ public strictfp class Capture {
 				new RGBDataAppSink.Listener() {
 					public void rgbFrame(int w, int h, IntBuffer buffer) {
 						currentFrameBuffer = buffer;
-						width = w;
-						height = h;
 				}
 			});
 			
 			Element capsfilter = ElementFactory.make("capsfilter", "caps");
 			
-			Caps sizeCaps = Caps.fromString("video/x-raw-rgb, width=600, height=400"
-							+ ", bpp=32, depth=32, framerate=30/1");
+			Caps sizeCaps = Caps.fromString("video/x-raw-rgb, width=" + (int)width + ", height=" + (int)height
+							+ " , bpp=32, depth=32, framerate=30/1");
 			capsfilter.setCaps(sizeCaps);
 			
 			Element scale = ElementFactory.make("videoscale", "scaler");
