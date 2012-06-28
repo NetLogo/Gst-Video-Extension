@@ -1,2 +1,3 @@
+*.jar.pack.gz
+*.jar
 /classes
-yoshi.jar
