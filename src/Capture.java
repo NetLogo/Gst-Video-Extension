@@ -172,8 +172,16 @@ public strictfp class Capture {
 				}
 			});
 			
-			cameraPipeline.addMany(webcamSource, conv, videofilter, rgbSink);
-			Element.linkMany(webcamSource, conv, videofilter, rgbSink);
+			Element capsfilter = ElementFactory.make("capsfilter", "caps");
+			
+			Caps sizeCaps = Caps.fromString("video/x-raw-rgb, width=600, height=400"
+							+ ", bpp=32, depth=32, framerate=30/1");
+			capsfilter.setCaps(sizeCaps);
+			
+			Element scale = ElementFactory.make("videoscale", "scaler");
+			
+			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, capsfilter, rgbSink);
+			Element.linkMany(webcamSource, conv, videofilter, scale, capsfilter, rgbSink);
 			
 			cameraPipeline.getBus().connect(new Bus.ERROR() {
 				public void errorMessage(GstObject source, int code, String message) {

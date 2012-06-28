@@ -32,9 +32,12 @@ import java.awt.image.*;
 
 public strictfp class Movie {
 	
-	private static Element player;
+	private static PlayBin2 player;
 	private static IntBuffer currentFrameBuffer;
 	private static float width, height;
+	private static Bin sink;
+	
+	
 //	private static javax.swing.JFrame playerFrame;
 //	private static QDGraphics graphics;
 	
@@ -145,10 +148,8 @@ public strictfp class Movie {
 				throw new ExtensionException("there is no movie open");
 			}
 			
-			Format[] fmt = { Format.TIME };
 			Double newPos = args[0].getDoubleValue();
-			
-			gst_api.gst_element_seek_simple(player, fmt[0], SeekFlags.FLUSH, newPos.longValue());
+			player.seek(ClockTime.fromNanos(newPos.longValue()));
 			
 		}
 	}
@@ -171,20 +172,35 @@ public strictfp class Movie {
 			*/
 			
 			if (player == null) {
-				player = ElementFactory.make("playbin2", "player");
-
+				player = new PlayBin2("player");
+				
 				final RGBDataAppSink rgbSink = new RGBDataAppSink("rgb", 
 					new RGBDataAppSink.Listener() {
 						public void rgbFrame(int w, int h, IntBuffer buffer) {
-							System.out.println("frame...");
+					//		System.out.println("frame...");
 							currentFrameBuffer = buffer;
-							width = w;
-							height = h;
+					//		width = w;
+					//		height = h;
 						}
 					});
-	
-					player.set("video-sink", rgbSink);
-					player.set("audio-sink", null);
+				
+				sink = new Bin();
+				
+				
+				Element scale = ElementFactory.make("videoscale", "scaler");
+				Element capsfilter = ElementFactory.make("capsfilter", "caps");
+				
+				Caps sizeCaps = Caps.fromString("width=" + width + ", height=" + height);
+				capsfilter.setCaps(sizeCaps);
+				
+				sink.addMany(scale, capsfilter, rgbSink);
+				Element.linkMany(scale, capsfilter, rgbSink);
+				
+				player.setVideoSink(sink);
+				
+				System.out.println(rgbSink.getCaps());
+				
+			//	player.set("audio-sink", null);
 			}
 			
 			/*
@@ -316,6 +332,11 @@ public strictfp class Movie {
 
 		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
 			try {
+				
+			//	GObject buff = (GObject)player.get("frame");
+			//	System.out.println(buff);
+			//	IntBuffer intBuffer = ((ByteBuffer) buff.getByteBuffer().rewind()).asIntBuffer();
+				
 				int[] data = currentFrameBuffer.array();
 				return Yoshi.getBufferedImage(data, (int)width, (int)height);
 			} catch (Exception e) {
