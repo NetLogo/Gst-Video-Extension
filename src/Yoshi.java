@@ -19,7 +19,10 @@ public strictfp class Yoshi extends DefaultClassManager {
 	
 	public void runOnce(org.nlogo.api.ExtensionManager em) throws ExtensionException {
 		// Init GStreamer
-		Gst.init();
+		
+		String args[] = {"--gst-plugin-spew"};
+		
+		Gst.init("Yoshi", args);
 		// first check that we can find the quicktime jar
 		// if we can't it throws an extension exception ev 3/3/09
 		em.getFile("yoshi/gstreamer-java-1.5.jar");

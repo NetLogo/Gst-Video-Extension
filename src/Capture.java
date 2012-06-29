@@ -153,16 +153,21 @@ public strictfp class Capture {
 			width = (float) (args[0].getDoubleValue() * patchSize);
 			height = (float) (args[1].getDoubleValue() * patchSize);
 			
-			System.out.println("width: " + width);
+			System.out.println("======== World Information ========");
+			System.out.println("width:  " + width);
 			System.out.println("height: " + height);
+			System.out.println("===================================");
+			
+			// Pipeline construction based on Processing
+			// http://code.google.com/p/processing/source/browse/trunk/processing/java/libraries/video/src/processing/video/Capture.java
 
 			cameraPipeline = new Pipeline("camera-capture");
 
 			Element videofilter = ElementFactory.make("capsfilter", "filter");
 			videofilter.setCaps(Caps.fromString("video/x-raw-rgb, width=640, height=480"
 							+ ", bpp=32, depth=32, framerate=30/1"));
-
-
+							
+			
 			Element conv = ElementFactory.make("ffmpegcolorspace", "ColorConverter");
 			Element webcamSource = ElementFactory.make(capturePlugin, "source");
 			
@@ -170,8 +175,9 @@ public strictfp class Capture {
 				new RGBDataAppSink.Listener() {
 					public void rgbFrame(int w, int h, IntBuffer buffer) {
 						currentFrameBuffer = buffer;
+					}
 				}
-			});
+			);
 			
 			Element capsfilter = ElementFactory.make("capsfilter", "caps");
 			
@@ -180,6 +186,7 @@ public strictfp class Capture {
 			capsfilter.setCaps(filterCaps);
 			
 			Element scale = ElementFactory.make("videoscale", "scaler");
+			scale.set("add-borders", true);
 			
 			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, capsfilter, rgbSink);
 			Element.linkMany(webcamSource, conv, videofilter, scale, capsfilter, rgbSink);
@@ -187,7 +194,6 @@ public strictfp class Capture {
 			cameraPipeline.getBus().connect(new Bus.ERROR() {
 				public void errorMessage(GstObject source, int code, String message) {
 					System.out.println("Error occurred: " + message);
-					Gst.quit();
 				}
 			});
 
@@ -202,7 +208,6 @@ public strictfp class Capture {
 			cameraPipeline.getBus().connect(new Bus.EOS() {
 				public void endOfStream(GstObject source) {
 					System.out.println("Finished playing file");
-				//	play.seek(0);
 				}
 			});
 				/*

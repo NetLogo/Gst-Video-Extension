@@ -41,7 +41,8 @@ public strictfp class Movie {
 //	private static javax.swing.JFrame playerFrame;
 //	private static QDGraphics graphics;
 	
-	private static final GstElementAPI gst_api = GstNative.load(GstElementAPI.class);
+//	private static final GstElementAPI gst_api = GstNative.load(GstElementAPI.class);
+		
 
 	public static void unload() {
 
@@ -60,16 +61,15 @@ public strictfp class Movie {
 		public void perform(Argument[] args, Context context) throws ExtensionException, LogoException {
 			
 			double patchSize = context.getAgent().world().patchSize();
-	//		final float width = (float) (args[1].getDoubleValue() * patchSize);
-	//		final float height = (float) (args[2].getDoubleValue() * patchSize);
-	
+				
 			width = (float) (args[1].getDoubleValue() * patchSize);
 			height = (float) (args[2].getDoubleValue() * patchSize);
 			
-			System.out.println("patch-size: " + patchSize);
-			
-			System.err.println("width: " + width);
-			System.err.println("height: " + height);
+			System.out.println("======== World Information ========");
+			System.out.println("patch-size : " + patchSize);
+			System.out.println("width      : " + width);
+			System.out.println("height     : " + height);
+			System.out.println("===================================");
 
 			try {
 				String filename = context.attachCurrentDirectory(args[0].getString());
@@ -130,6 +130,9 @@ public strictfp class Movie {
 			}
 			System.err.println("Starting movie (in theory...)");
 			player.setState(State.PLAYING);
+			
+			System.out.println(sink.getState());
+			
 		}
 	}
 	
@@ -163,6 +166,30 @@ public strictfp class Movie {
 		public String getAgentClassString() {
 			return "O";
 		}
+		
+		private void installCallbacks() {
+			Bus playerBus = player.getBus();
+			
+			playerBus.connect(new Bus.ERROR() {
+				public void errorMessage(GstObject source, int code, String message) {
+					System.out.println("Error occurred: " + message);
+				}
+			});
+
+			playerBus.connect(new Bus.STATE_CHANGED() {
+				public void stateChanged(GstObject source, State old, State current, State pending) {
+					if (source == player) {
+						System.out.println("Pipeline state changed from " + old + " to " + current);
+					}
+				}
+			});
+
+			playerBus.connect(new Bus.EOS() {
+				public void endOfStream(GstObject source) {
+					System.out.println("Finished playing file");
+				}
+			});
+		}
 
 		public void perform(Argument[] args, Context context) throws ExtensionException, LogoException {
 			/*
@@ -177,15 +204,18 @@ public strictfp class Movie {
 				final RGBDataAppSink rgbSink = new RGBDataAppSink("rgb", 
 					new RGBDataAppSink.Listener() {
 						public void rgbFrame(int w, int h, IntBuffer buffer) {
-					//		System.out.println("frame...");
 							currentFrameBuffer = buffer;
-					//		width = w;
-					//		height = h;
+							width = w;
+							height = h;
 						}
-					});
+					}
+				);
 				
+				installCallbacks();
+					
 				sink = new Bin();
 				
+				/*
 				Element scale = ElementFactory.make("videoscale", "scaler");
 				Element capsfilter = ElementFactory.make("capsfilter", "caps");
 				
@@ -197,9 +227,11 @@ public strictfp class Movie {
 				Element.linkMany(scale, capsfilter, rgbSink);
 				
 				player.setVideoSink(sink);
+				*/
 				
-				System.out.println(rgbSink.getCaps());
+				player.setVideoSink(rgbSink);
 				
+			//	System.out.println(rgbSink.getCaps());	
 			//	player.set("audio-sink", null);
 			}
 			
@@ -228,7 +260,6 @@ public strictfp class Movie {
 		}
 		
 		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
-			System.out.println(player.getState());
 			return new Boolean(player.isPlaying());
 		}
 	}
@@ -263,7 +294,12 @@ public strictfp class Movie {
 
 		public void perform(Argument[] args, Context context) throws ExtensionException, LogoException {
 			
-	
+			if (player == null)
+				throw new ExtensionException("no movie to close");
+			
+			player.setState(State.NULL);
+			player = null;
+			
 			/*
 			movie = null;
 			graphics = null;
@@ -288,12 +324,12 @@ public strictfp class Movie {
 		
 		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
 			
-			Format[] fmt = { Format.TIME };
-			long[] duration = { 0 };
+			if (player == null) 
+				throw new ExtensionException("No valid player found to query duration for");
 			
-			gst_api.gst_element_query_duration(player, fmt, duration);
+			long duration = player.queryDuration(Format.TIME);
 			
-			return new Double(duration[0]);
+			return new Double(duration);
 		}
 	}
 
@@ -308,12 +344,12 @@ public strictfp class Movie {
 		
 		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
 			
-			Format[] fmt = { Format.TIME };
-			long[] position = { 0 };
+			if (player == null) 
+				throw new ExtensionException("No valid player found to query duration for");
 			
-			gst_api.gst_element_query_position(player, fmt, position);
+			long position = player.queryPosition(Format.TIME);
 			
-			return new Double(position[0]);
+			return new Double(position);
 		}
 	}
 
