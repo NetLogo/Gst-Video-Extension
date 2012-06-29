@@ -186,12 +186,12 @@ public strictfp class Movie {
 				
 				sink = new Bin();
 				
-				
 				Element scale = ElementFactory.make("videoscale", "scaler");
 				Element capsfilter = ElementFactory.make("capsfilter", "caps");
 				
-				Caps sizeCaps = Caps.fromString("width=" + width + ", height=" + height);
-				capsfilter.setCaps(sizeCaps);
+				Caps filterCaps = Caps.fromString("video/x-raw-rgb, width=" + (int)width + ", height=" + (int)height
+								+ " , bpp=32, depth=32, framerate=30/1");
+				capsfilter.setCaps(filterCaps);
 				
 				sink.addMany(scale, capsfilter, rgbSink);
 				Element.linkMany(scale, capsfilter, rgbSink);
@@ -229,10 +229,7 @@ public strictfp class Movie {
 		
 		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
 			System.out.println(player.getState());
-			if (player.getState() == State.PLAYING)
-				return new Boolean(true);
-			else
-				return new Boolean(false);
+			return new Boolean(player.isPlaying());
 		}
 	}
 

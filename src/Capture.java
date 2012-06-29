@@ -175,9 +175,9 @@ public strictfp class Capture {
 			
 			Element capsfilter = ElementFactory.make("capsfilter", "caps");
 			
-			Caps sizeCaps = Caps.fromString("video/x-raw-rgb, width=" + (int)width + ", height=" + (int)height
+			Caps filterCaps = Caps.fromString("video/x-raw-rgb, width=" + (int)width + ", height=" + (int)height
 							+ " , bpp=32, depth=32, framerate=30/1");
-			capsfilter.setCaps(sizeCaps);
+			capsfilter.setCaps(filterCaps);
 			
 			Element scale = ElementFactory.make("videoscale", "scaler");
 			
