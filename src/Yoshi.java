@@ -39,9 +39,15 @@ public strictfp class Yoshi extends DefaultClassManager {
 		primitiveManager.addPrimitive
 			("camera-stop", new Capture.StopCamera());
 		primitiveManager.addPrimitive
+			("camera-is-rolling?", new Capture.IsRolling());
+		primitiveManager.addPrimitive
 			("camera-select", new Capture.SelectCamera());
 		primitiveManager.addPrimitive
 			("camera-set-stretches", new Capture.SetStrechToFillScreen());
+		primitiveManager.addPrimitive
+			("camera-set-contrast", new Capture.SetContrast());
+		primitiveManager.addPrimitive
+			("camera-set-brightness", new Capture.SetBrightness());
 		
 		primitiveManager.addPrimitive
 			("movie-open", new Movie.OpenMovie());
@@ -68,8 +74,9 @@ public strictfp class Yoshi extends DefaultClassManager {
 	public void unload(ExtensionManager em) throws ExtensionException {
 		
 		Movie.unload();
-	//	Capture.unload();
+		Capture.unload();
 		
+		/*
 		// Since native libraries cannot be loaded in more than one classloader at once
 		// and even though we are going dispose of this classloader we can't be sure
 		// it will be GC'd before we want to reload this extension, we unload it manually
@@ -89,13 +96,15 @@ public strictfp class Yoshi extends DefaultClassManager {
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 		}
+		*/
 	}
 
 	static java.awt.image.BufferedImage getBufferedImage(int[] data, int width, int height) {
 		return new java.awt.image.BufferedImage(colorModel, getRaster(getRGBSampleModel(width, height), data), false, null);
 	}
 
-	private static final DirectColorModel colorModel = new DirectColorModel(32, 0xff0000, 0xff00, 0xff);
+	private static final DirectColorModel colorModel = new DirectColorModel(32, 0xff, 0xff00, 0xff0000);
+//	private static final DirectColorModel colorModel = new DirectColorModel(32, 0xff0000, 0xff00, 0xff);
 
 	private static SampleModel getRGBSampleModel(int width, int height) {
 		WritableRaster wr = colorModel.createCompatibleWritableRaster(1, 1);

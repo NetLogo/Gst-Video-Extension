@@ -45,7 +45,12 @@ public strictfp class Movie {
 		
 
 	public static void unload() {
-
+		if (player != null) {
+			player.setState(State.NULL);
+			player = null;
+		}
+		
+		sink = null;
 	}
 
 	public static class OpenMovie extends DefaultCommand {
@@ -215,24 +220,31 @@ public strictfp class Movie {
 					
 				sink = new Bin();
 				
-				/*
 				Element scale = ElementFactory.make("videoscale", "scaler");
 				Element capsfilter = ElementFactory.make("capsfilter", "caps");
 				
-				Caps filterCaps = Caps.fromString("video/x-raw-rgb, width=" + (int)width + ", height=" + (int)height
-								+ " , bpp=32, depth=32, framerate=30/1");
+				List<Pad> pads = scale.getSinkPads();
+				Pad sinkPad = pads.get(0);
+				
+				System.out.println("sinkPad: " + sinkPad);
+				
+				GhostPad ghost = new GhostPad("sink", sinkPad);
+				sink.addPad(ghost);
+				
+				Caps filterCaps = Caps.fromString("video/x-raw-rgb, width=" + (int)width + ", height=" + (int)height);
 				capsfilter.setCaps(filterCaps);
 				
-				sink.addMany(scale, capsfilter, rgbSink);
-				Element.linkMany(scale, capsfilter, rgbSink);
+				Element conv = ElementFactory.make("ffmpegcolorspace", null);
+				
+				sink.addMany(scale, capsfilter, conv, rgbSink);
+				Element.linkMany(scale, capsfilter, conv, rgbSink);
 				
 				player.setVideoSink(sink);
-				*/
+					
+		//		player.setVideoSink(rgbSink);	
 				
-				player.setVideoSink(rgbSink);
 				
-			//	System.out.println(rgbSink.getCaps());	
-			//	player.set("audio-sink", null);
+				
 			}
 			
 			/*
@@ -372,7 +384,6 @@ public strictfp class Movie {
 				
 				int[] data = currentFrameBuffer.array();				
 				return Yoshi.getBufferedImage(data, (int)width, (int)height);
-				
 				
 			} catch (Exception e) {
 				e.printStackTrace();

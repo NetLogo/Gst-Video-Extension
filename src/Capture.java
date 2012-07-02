@@ -34,7 +34,9 @@ public strictfp class Capture {
 	
 	private static Pipeline cameraPipeline;
 	private static IntBuffer currentFrameBuffer;
-	private static Element scale;
+	private static Element scale, balance;
+	
+	private static Element fpsCountOverlay;
 	
 	private static AppSink appSink;
 	
@@ -42,9 +44,19 @@ public strictfp class Capture {
 	private static SequenceGrabber capture;
 	private static QDGraphics graphics;
 	*/
-	private static float width, height;
 
 	public static void unload() throws ExtensionException {
+		
+		if (cameraPipeline != null) {
+			cameraPipeline.setState(State.NULL);
+			cameraPipeline = null;
+		}
+		
+		scale = balance = null;
+		appSink = null;
+		
+		fpsCountOverlay = null;
+		
 		/*
 		try {
 			if (capture != null) {
@@ -71,6 +83,42 @@ public strictfp class Capture {
 		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
 			boolean shouldAddBorders = !(args[0].getBooleanValue());
 			scale.set("add-borders", shouldAddBorders);
+		}
+	}
+	
+	public static class SetContrast extends DefaultCommand {
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{Syntax.NumberType()});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			double contrast = args[0].getDoubleValue();
+			if (contrast >= 0 && contrast <= 2)
+				balance.set("contrast", contrast);
+			else
+				throw new ExtensionException("Invalid contrast value: [0, 2] (default is 1)");
+		}
+	}
+	
+	public static class SetBrightness extends DefaultCommand {
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{Syntax.NumberType()});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			double contrast = args[0].getDoubleValue();
+			if (contrast >= -1 && contrast <= 1)
+				balance.set("brightness", contrast);
+			else
+				throw new ExtensionException("Invalid contrast value: [-1, 1] (default is 0)");
 		}
 	}
 
@@ -110,6 +158,24 @@ public strictfp class Capture {
 				throw new ExtensionException(e.getMessage());
 			}
 			*/
+		}
+	}
+	
+	public static class IsRolling extends DefaultReporter {
+		public Syntax getSyntax() {
+			return Syntax.reporterSyntax(Syntax.BooleanType());
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+		
+		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
+			if (cameraPipeline != null) {
+				State state = cameraPipeline.getState();
+				return new Boolean(state == State.PLAYING);
+			}
+			return new Boolean(false);
 		}
 	}
 
@@ -173,8 +239,8 @@ public strictfp class Capture {
 			int frameRateDenominator = 1;
 	
 			double patchSize = context.getAgent().world().patchSize();
-			width = (float) (args[0].getDoubleValue() * patchSize);
-			height = (float) (args[1].getDoubleValue() * patchSize);
+			float width = (float) (args[0].getDoubleValue() * patchSize);
+			float height = (float) (args[1].getDoubleValue() * patchSize);
 			
 			System.out.println("======== World Information ========");
 			System.out.println("width:  " + width);
@@ -186,7 +252,7 @@ public strictfp class Capture {
 
 			cameraPipeline = new Pipeline("camera-capture");
 
-			Element videofilter = ElementFactory.make("capsfilter", "filter");
+			Element videofilter = ElementFactory.make("capsfilter", null);
 			videofilter.setCaps(Caps.fromString("video/x-raw-rgb, width=640, height=480"
 							+ ", bpp=32, depth=32, framerate=30/1"));
 							
@@ -209,15 +275,24 @@ public strictfp class Capture {
 			
 			Element capsfilter = ElementFactory.make("capsfilter", "caps");
 			
-			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=32, framerate=30/1, pixel-aspect-ratio=480/640", (int)width, (int)height);
+			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=32, framerate=30/1," +  
+											  "pixel-aspect-ratio=480/640", (int)width, (int)height);
 			Caps filterCaps = Caps.fromString(capsString);
 			
 			appSink.setCaps(filterCaps);
 			
-			scale = ElementFactory.make("videoscale", "scaler");
+			scale = ElementFactory.make("videoscale", null);
+ 			balance = ElementFactory.make("videobalance", null);
+		//	videobalance.set("contrast", 2);
+		
+			fpsCountOverlay = ElementFactory.make("textoverlay", null);
+			fpsCountOverlay.set("text", "FPS: --");
+			fpsCountOverlay.set("font-desc", "normal 32");
+			fpsCountOverlay.set("halign", "right");
+			fpsCountOverlay.set("valign", "top");
 			
-			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, appSink);
-			Element.linkMany(webcamSource, conv, videofilter, scale, appSink);
+			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
+			Element.linkMany      (webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
 			
 			cameraPipeline.getBus().connect(new Bus.ERROR() {
 				public void errorMessage(GstObject source, int code, String message) {
@@ -277,6 +352,9 @@ public strictfp class Capture {
 
 	public static class Image extends DefaultReporter {
 		
+		private static long prevTime;
+		private static int frameCount;
+		
 		public Syntax getSyntax() {
 			return Syntax.reporterSyntax(new int[]{}, Syntax.WildcardType());
 		}
@@ -317,22 +395,41 @@ public strictfp class Capture {
 			//	int[] data = currentFrameBuffer.array();
 				
 				Buffer buffer = appSink.pullBuffer();
-				
-				// From http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
-				
+							
+				// From:
+				// http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
+				/*
 				Structure structure = buffer.getCaps().getStructure(0);
 		 		int origHeight = structure.getInteger("height");
 		    	int origWidth = structure.getInteger("width");
+		
+				BufferedImage originalImage = new BufferedImage(origWidth, origHeight, BufferedImage.TYPE_INT_ARGB);
+			    originalImage.setRGB(0, 0, origWidth, origHeight, imageData, 0, origWidth);
+				*/
 				
 				IntBuffer intBuf = buffer.getByteBuffer().asIntBuffer();
 				int[] imageData = new int[intBuf.capacity()];
 				intBuf.get(imageData, 0, imageData.length);
 				
-				BufferedImage originalImage = new BufferedImage(origWidth, origHeight, BufferedImage.TYPE_INT_ARGB);
-			    originalImage.setRGB(0, 0, origWidth, origHeight, imageData, 0, origWidth);
+				Structure structure = buffer.getCaps().getStructure(0);
+				int height = structure.getInteger("height");
+				int width = structure.getInteger("width");
+		
+				if (prevTime == 0)
+					prevTime = System.currentTimeMillis();
+					
+				if (System.currentTimeMillis() - prevTime >= 1000) {
+					
+					fpsCountOverlay.set("text", "FPS: " + frameCount);
+					
+					prevTime = System.currentTimeMillis();
+					frameCount = 0;		
+				}
+				
+				frameCount++;
 			
-			//	return Yoshi.getBufferedImage(imageData, (int)width, (int)height);
-				return originalImage;
+				return Yoshi.getBufferedImage(imageData, width, height);
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new ExtensionException(e.getMessage());
