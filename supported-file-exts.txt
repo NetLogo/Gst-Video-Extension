@@ -1,1 +1,0 @@
-avi, wmv, mp4, mp4v, mpg, mpg2, mov, movie, flv, rm(?), qt(?), og[mvx], mkv, divx, bin
