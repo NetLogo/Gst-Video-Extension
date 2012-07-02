@@ -24,6 +24,7 @@ import java.util.List;
 import java.io.File;
 import java.lang.reflect.*;
 
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
@@ -33,6 +34,10 @@ public strictfp class Capture {
 	
 	private static Pipeline cameraPipeline;
 	private static IntBuffer currentFrameBuffer;
+	private static Element scale;
+	
+	private static AppSink appSink;
+	
 	/*
 	private static SequenceGrabber capture;
 	private static QDGraphics graphics;
@@ -52,6 +57,21 @@ public strictfp class Capture {
 			throw new ExtensionException(e.getMessage());
 		}
 		*/
+	}
+	
+	public static class SetStrechToFillScreen extends DefaultCommand {
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{Syntax.BooleanType()});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			boolean shouldAddBorders = !(args[0].getBooleanValue());
+			scale.set("add-borders", shouldAddBorders);
+		}
 	}
 
 	public static class StartCamera extends DefaultCommand {
@@ -148,6 +168,9 @@ public strictfp class Capture {
 			final String capturePlugin = "qtkitvideosrc";
 			final String devicePropertyName = "device-name"; 
 			final String indexPropertyName = "device-index";
+			
+			int frameRateNumerator = 30;
+			int frameRateDenominator = 1;
 	
 			double patchSize = context.getAgent().world().patchSize();
 			width = (float) (args[0].getDoubleValue() * patchSize);
@@ -168,9 +191,13 @@ public strictfp class Capture {
 							+ ", bpp=32, depth=32, framerate=30/1"));
 							
 			
-			Element conv = ElementFactory.make("ffmpegcolorspace", "ColorConverter");
-			Element webcamSource = ElementFactory.make(capturePlugin, "source");
+			Element conv = ElementFactory.make("ffmpegcolorspace", null);
+			Element webcamSource = ElementFactory.make(capturePlugin, null);
 			
+			appSink = (AppSink)ElementFactory.make("appsink", null);
+			appSink.set("max-buffers", 1);
+			
+			/*
 			final RGBDataAppSink rgbSink = new RGBDataAppSink("rgb", 
 				new RGBDataAppSink.Listener() {
 					public void rgbFrame(int w, int h, IntBuffer buffer) {
@@ -178,18 +205,19 @@ public strictfp class Capture {
 					}
 				}
 			);
+			*/
 			
 			Element capsfilter = ElementFactory.make("capsfilter", "caps");
 			
-			Caps filterCaps = Caps.fromString("video/x-raw-rgb, width=" + (int)width + ", height=" + (int)height
-							+ " , bpp=32, depth=32, framerate=30/1");
-			capsfilter.setCaps(filterCaps);
+			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=32, framerate=30/1, pixel-aspect-ratio=480/640", (int)width, (int)height);
+			Caps filterCaps = Caps.fromString(capsString);
 			
-			Element scale = ElementFactory.make("videoscale", "scaler");
-			scale.set("add-borders", true);
+			appSink.setCaps(filterCaps);
 			
-			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, capsfilter, rgbSink);
-			Element.linkMany(webcamSource, conv, videofilter, scale, capsfilter, rgbSink);
+			scale = ElementFactory.make("videoscale", "scaler");
+			
+			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, appSink);
+			Element.linkMany(webcamSource, conv, videofilter, scale, appSink);
 			
 			cameraPipeline.getBus().connect(new Bus.ERROR() {
 				public void errorMessage(GstObject source, int code, String message) {
@@ -205,11 +233,6 @@ public strictfp class Capture {
 				}
 			});
 
-			cameraPipeline.getBus().connect(new Bus.EOS() {
-				public void endOfStream(GstObject source) {
-					System.out.println("Finished playing file");
-				}
-			});
 				/*
 			Object selected = javax.swing.JOptionPane.showInputDialog(null, 
 												"Select an input device: ", 
@@ -289,8 +312,27 @@ public strictfp class Capture {
 				int[] data = (int[]) buffer.asIntBuffer().array();
 				*/
 				
-				int[] data = currentFrameBuffer.array();
-				return Yoshi.getBufferedImage(data, (int)width, (int)height);
+			//	Thread.sleep(30);
+				
+			//	int[] data = currentFrameBuffer.array();
+				
+				Buffer buffer = appSink.pullBuffer();
+				
+				// From http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
+				
+				Structure structure = buffer.getCaps().getStructure(0);
+		 		int origHeight = structure.getInteger("height");
+		    	int origWidth = structure.getInteger("width");
+				
+				IntBuffer intBuf = buffer.getByteBuffer().asIntBuffer();
+				int[] imageData = new int[intBuf.capacity()];
+				intBuf.get(imageData, 0, imageData.length);
+				
+				BufferedImage originalImage = new BufferedImage(origWidth, origHeight, BufferedImage.TYPE_INT_ARGB);
+			    originalImage.setRGB(0, 0, origWidth, origHeight, imageData, 0, origWidth);
+			
+			//	return Yoshi.getBufferedImage(imageData, (int)width, (int)height);
+				return originalImage;
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new ExtensionException(e.getMessage());

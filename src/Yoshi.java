@@ -40,6 +40,8 @@ public strictfp class Yoshi extends DefaultClassManager {
 			("camera-stop", new Capture.StopCamera());
 		primitiveManager.addPrimitive
 			("camera-select", new Capture.SelectCamera());
+		primitiveManager.addPrimitive
+			("camera-set-stretches", new Capture.SetStrechToFillScreen());
 		
 		primitiveManager.addPrimitive
 			("movie-open", new Movie.OpenMovie());

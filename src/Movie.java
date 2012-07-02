@@ -370,8 +370,10 @@ public strictfp class Movie {
 			//	System.out.println(buff);
 			//	IntBuffer intBuffer = ((ByteBuffer) buff.getByteBuffer().rewind()).asIntBuffer();
 				
-				int[] data = currentFrameBuffer.array();
+				int[] data = currentFrameBuffer.array();				
 				return Yoshi.getBufferedImage(data, (int)width, (int)height);
+				
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new ExtensionException(e.getMessage());
