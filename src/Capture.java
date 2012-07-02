@@ -118,9 +118,47 @@ public strictfp class Capture {
 			if (contrast >= -1 && contrast <= 1)
 				balance.set("brightness", contrast);
 			else
-				throw new ExtensionException("Invalid contrast value: [-1, 1] (default is 0)");
+				throw new ExtensionException("Invalid brightness value: [-1, 1] (default is 0)");
 		}
 	}
+	
+	public static class SetHue extends DefaultCommand {
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{Syntax.NumberType()});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			double contrast = args[0].getDoubleValue();
+			if (contrast >= -1 && contrast <= 1)
+				balance.set("hue", contrast);
+			else
+				throw new ExtensionException("Invalid hue value: [-1, 1] (default is 0)");
+		}
+	}
+	
+	public static class SetSaturation extends DefaultCommand {
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{Syntax.NumberType()});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			double contrast = args[0].getDoubleValue();
+			if (contrast >= 0 && contrast <= 2)
+				balance.set("saturation", contrast);
+			else
+				throw new ExtensionException("Invalid saturation value: [0, 2] (default is 1)");
+		}
+	}
+	
+	
 
 	public static class StartCamera extends DefaultCommand {
 		

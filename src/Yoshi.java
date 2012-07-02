@@ -48,6 +48,10 @@ public strictfp class Yoshi extends DefaultClassManager {
 			("camera-set-contrast", new Capture.SetContrast());
 		primitiveManager.addPrimitive
 			("camera-set-brightness", new Capture.SetBrightness());
+		primitiveManager.addPrimitive
+			("camera-set-hue", new Capture.SetHue());
+		primitiveManager.addPrimitive
+			("camera-set-saturation", new Capture.SetSaturation());
 		
 		primitiveManager.addPrimitive
 			("movie-open", new Movie.OpenMovie());
