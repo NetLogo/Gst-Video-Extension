@@ -107,8 +107,8 @@ public strictfp class Yoshi extends DefaultClassManager {
 		return new java.awt.image.BufferedImage(colorModel, getRaster(getRGBSampleModel(width, height), data), false, null);
 	}
 
-	private static final DirectColorModel colorModel = new DirectColorModel(32, 0xff, 0xff00, 0xff0000);
-//	private static final DirectColorModel colorModel = new DirectColorModel(32, 0xff0000, 0xff00, 0xff);
+//	private static final DirectColorModel colorModel = new DirectColorModel(32, 0xff, 0xff00, 0xff0000);
+	private static final DirectColorModel colorModel = new DirectColorModel(32, 0xff0000, 0xff00, 0xff);
 
 	private static SampleModel getRGBSampleModel(int width, int height) {
 		WritableRaster wr = colorModel.createCompatibleWritableRaster(1, 1);

@@ -217,7 +217,8 @@ public strictfp class Movie {
 				);
 				
 				installCallbacks();
-					
+				
+				/*
 				sink = new Bin();
 				
 				Element scale = ElementFactory.make("videoscale", "scaler");
@@ -238,12 +239,10 @@ public strictfp class Movie {
 				
 				sink.addMany(scale, capsfilter, conv, rgbSink);
 				Element.linkMany(scale, capsfilter, conv, rgbSink);
-				
-				player.setVideoSink(sink);
+				*/
+		//		player.setVideoSink(sink);
 					
-		//		player.setVideoSink(rgbSink);	
-				
-				
+				player.setVideoSink(rgbSink);	
 				
 			}
 			

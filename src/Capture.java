@@ -288,50 +288,46 @@ public strictfp class Capture {
 			// Pipeline construction based on Processing
 			// http://code.google.com/p/processing/source/browse/trunk/processing/java/libraries/video/src/processing/video/Capture.java
 
+			// Pipeline
 			cameraPipeline = new Pipeline("camera-capture");
+			
+			// Source
+			Element webcamSource = ElementFactory.make(capturePlugin, null);
 
+			// Conversion
+			Element conv = ElementFactory.make("ffmpegcolorspace", null);
 			Element videofilter = ElementFactory.make("capsfilter", null);
 			videofilter.setCaps(Caps.fromString("video/x-raw-rgb, width=640, height=480"
-							+ ", bpp=32, depth=32, framerate=30/1"));
+							+ ", bpp=32, depth=32, framerate=30/1, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255"));
 							
-			
-			Element conv = ElementFactory.make("ffmpegcolorspace", null);
-			Element webcamSource = ElementFactory.make(capturePlugin, null);
-			
-			appSink = (AppSink)ElementFactory.make("appsink", null);
-			appSink.set("max-buffers", 1);
-			
-			/*
-			final RGBDataAppSink rgbSink = new RGBDataAppSink("rgb", 
-				new RGBDataAppSink.Listener() {
-					public void rgbFrame(int w, int h, IntBuffer buffer) {
-						currentFrameBuffer = buffer;
-					}
-				}
-			);
-			*/
-			
-			Element capsfilter = ElementFactory.make("capsfilter", "caps");
-			
-			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=32, framerate=30/1," +  
-											  "pixel-aspect-ratio=480/640", (int)width, (int)height);
-			Caps filterCaps = Caps.fromString(capsString);
-			
-			appSink.setCaps(filterCaps);
-			
+			// Scale
 			scale = ElementFactory.make("videoscale", null);
+			
+			// Balance
  			balance = ElementFactory.make("videobalance", null);
-		//	videobalance.set("contrast", 2);
-		
+			
+			// FPS textoverlay
 			fpsCountOverlay = ElementFactory.make("textoverlay", null);
 			fpsCountOverlay.set("text", "FPS: --");
 			fpsCountOverlay.set("font-desc", "normal 32");
 			fpsCountOverlay.set("halign", "right");
 			fpsCountOverlay.set("valign", "top");
 			
+			// Sink
+			appSink = (AppSink)ElementFactory.make("appsink", null);
+			appSink.set("max-buffers", 1);
+			
+			Element capsfilter = ElementFactory.make("capsfilter", "caps");
+			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=32, framerate=30/1," +  
+											  "pixel-aspect-ratio=480/640", (int)width, (int)height);
+			Caps filterCaps = Caps.fromString(capsString);
+			appSink.setCaps(filterCaps);
+			
 			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
 			Element.linkMany      (webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
 			
+			
+			// Bus callbacks
 			cameraPipeline.getBus().connect(new Bus.ERROR() {
 				public void errorMessage(GstObject source, int code, String message) {
 					System.out.println("Error occurred: " + message);

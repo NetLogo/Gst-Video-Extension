@@ -1,5 +1,7 @@
 extensions [yoshi bitmap]
 
+globals [used-drawing-layer]
+
 
 to load-movie
   yoshi:movie-open-player
@@ -56,17 +58,34 @@ to stop-webcam
 end
 
 to cam-mirror-to-patches
-  bitmap:copy-to-pcolors yoshi:camera-image false
-  yoshi:camera-set-stretches camera-stretch
-  display
+  
+  if (used-drawing-layer != 0 and used-drawing-layer) [
+   clear-all
+   set used-drawing-layer false 
+  ]
+  
+  if (yoshi:camera-is-rolling?) [
+    update-fx
+    bitmap:copy-to-pcolors yoshi:camera-image false
+    display
+  ]
 end
 
 to cam-mirror-to-drawing
   if (yoshi:camera-is-rolling?) [
-    bitmap:copy-to-drawing yoshi:camera-image 0 0
     update-fx
+    bitmap:copy-to-drawing yoshi:camera-image 0 0
     display
+    set used-drawing-layer true
   ]
+  
+end
+
+to random-fx
+  set contrast random-float 2
+  set brightness -1 + random-float 2
+  set hue -1 + random-float 2
+  set saturation random-float 2
 end
 
 to update-fx
@@ -77,20 +96,21 @@ to update-fx
   yoshi:camera-set-saturation saturation
 end
 
-to sprout-turtles
-  ask patches [
-   sprout 1 [set color pcolor]
-  ]
+to reset-fx
+  set contrast 1
+  set brightness 0
+  set hue 0
+  set saturation 1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-264
-23
-674
-354
+261
+10
+926
+532
 -1
 -1
-5.0
+8.19
 1
 10
 1
@@ -112,9 +132,9 @@ ticks
 
 INPUTBOX
 12
-25
+63
 247
-85
+123
 file-name
 ../videos/car-kick.mp4
 1
@@ -123,9 +143,9 @@ String
 
 BUTTON
 12
-88
-114
-121
+126
+247
+159
 NIL
 load-movie\n
 NIL
@@ -139,10 +159,10 @@ NIL
 1
 
 BUTTON
-10
-165
-114
-198
+9
+201
+246
+234
 NIL
 play-movie\n\n
 NIL
@@ -156,10 +176,10 @@ NIL
 1
 
 BUTTON
-10
-204
-122
-237
+9
+235
+246
+268
 NIL
 pause-movie
 NIL
@@ -173,10 +193,10 @@ NIL
 1
 
 BUTTON
-13
-256
-160
-289
+10
+323
+247
+356
 NIL
 mirror-to-patches
 T
@@ -190,10 +210,10 @@ NIL
 1
 
 BUTTON
-14
-294
-162
-327
+9
+358
+247
+391
 mirror-to-drawing
 mirror-to-drawing
 T
@@ -207,10 +227,10 @@ NIL
 1
 
 BUTTON
-892
-24
-1028
-57
+939
+52
+1139
+85
 Initialize Webcam
 init-webcam
 NIL
@@ -224,10 +244,10 @@ NIL
 1
 
 BUTTON
-899
-80
-1013
-113
+938
+106
+1138
+139
 Start Webcam
 start-webcam
 NIL
@@ -241,10 +261,10 @@ NIL
 1
 
 BUTTON
-901
-118
-1014
-151
+938
+142
+1137
+175
 Stop Webcam
 stop-webcam
 NIL
@@ -258,10 +278,10 @@ NIL
 1
 
 BUTTON
-897
-195
-1076
-228
+937
+202
+1137
+235
 NIL
 cam-mirror-to-patches
 T
@@ -275,10 +295,10 @@ NIL
 1
 
 BUTTON
-898
-233
-1078
-266
+937
+237
+1137
+270
 NIL
 cam-mirror-to-drawing
 T
@@ -291,28 +311,11 @@ NIL
 NIL
 1
 
-BUTTON
-896
-418
-1016
-451
-NIL
-sprout-turtles
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SLIDER
-264
-459
-875
-492
+261
+535
+927
+568
 seek-pos
 seek-pos
 0
@@ -324,10 +327,10 @@ seek-pos
 HORIZONTAL
 
 BUTTON
-264
-494
-877
-527
+261
+569
+927
+602
 NIL
 seek-to-current-pos
 NIL
@@ -341,10 +344,10 @@ NIL
 1
 
 SWITCH
-900
-294
-1052
-327
+937
+281
+1136
+314
 camera-stretch
 camera-stretch
 0
@@ -352,64 +355,138 @@ camera-stretch
 -1000
 
 SLIDER
-680
-24
-713
-174
+989
+341
+1022
+491
 contrast
 contrast
 0
 2
-1
+1.8682786371969162
 0.1
 1
 NIL
 VERTICAL
 
 SLIDER
-717
-25
-750
-175
+1026
+342
+1059
+492
 brightness
 brightness
 -1
 1
-0
+-0.08468636884031366
 0.1
 1
 NIL
 VERTICAL
 
 SLIDER
-753
-24
-786
-174
+1064
+341
+1097
+491
 hue
 hue
 -1
 1
-0
+0.6278082531088278
 0.1
 1
 NIL
 VERTICAL
 
 SLIDER
-793
-24
-826
-174
+1102
+341
+1135
+491
 saturation
 saturation
 0
 2
-1
+0.4244028595104159
 0.1
 1
 NIL
 VERTICAL
+
+BUTTON
+989
+498
+1136
+531
+NIL
+reset-fx\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+TEXTBOX
+12
+304
+162
+322
+Mirroring options:
+14
+0.0
+1
+
+TEXTBOX
+12
+181
+162
+199
+Controls:\n
+14
+0.0
+1
+
+TEXTBOX
+104
+34
+160
+56
+Movie\n
+18
+0.0
+1
+
+TEXTBOX
+1000
+20
+1067
+43
+Camera
+18
+0.0
+1
+
+BUTTON
+989
+533
+1136
+566
+NIL
+random-fx
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
