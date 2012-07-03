@@ -22,16 +22,20 @@ to seek-to-current-pos
   yoshi:movie-set-time new-pos
 end
 
-to mirror-to-patches
-  bitmap:copy-to-pcolors yoshi:movie-image false
-  if (yoshi:movie-playing?) [update-slider]
-  display
+to mov-mirror-to-patches
+  if (yoshi:movie-playing?) [
+    bitmap:copy-to-pcolors yoshi:movie-image false
+    if (yoshi:movie-playing?) [update-slider]
+    display
+  ]
 end
 
-to mirror-to-drawing
-  bitmap:copy-to-drawing yoshi:movie-image 0 0
-  update-slider
-  display
+to mov-mirror-to-drawing
+  if (yoshi:movie-playing?) [
+    bitmap:copy-to-drawing yoshi:movie-image 0 0
+    update-slider
+    display
+  ]
 end
 
 to update-slider
@@ -82,10 +86,10 @@ to cam-mirror-to-drawing
 end
 
 to random-fx
-  set contrast random-float 2
-  set brightness -1 + random-float 2
-  set hue -1 + random-float 2
-  set saturation random-float 2
+  set contrast precision (random-float 2) 2
+  set brightness precision (-1 + (random-float 2)) 2
+  set hue precision (-1 + (random-float 2)) 2
+  set saturation precision (random-float 2) 2
 end
 
 to update-fx
@@ -198,7 +202,7 @@ BUTTON
 247
 356
 NIL
-mirror-to-patches
+mov-mirror-to-patches
 T
 1
 T
@@ -215,7 +219,7 @@ BUTTON
 247
 391
 mirror-to-drawing
-mirror-to-drawing
+mov-mirror-to-drawing
 T
 1
 T
@@ -320,7 +324,7 @@ seek-pos
 seek-pos
 0
 100
-0
+99
 1
 1
 %
@@ -350,7 +354,7 @@ SWITCH
 314
 camera-stretch
 camera-stretch
-0
+1
 1
 -1000
 
@@ -363,7 +367,7 @@ contrast
 contrast
 0
 2
-1.8682786371969162
+1
 0.1
 1
 NIL
@@ -378,7 +382,7 @@ brightness
 brightness
 -1
 1
--0.08468636884031366
+0
 0.1
 1
 NIL
@@ -393,7 +397,7 @@ hue
 hue
 -1
 1
-0.6278082531088278
+0
 0.1
 1
 NIL
@@ -408,7 +412,7 @@ saturation
 saturation
 0
 2
-0.4244028595104159
+1
 0.1
 1
 NIL
