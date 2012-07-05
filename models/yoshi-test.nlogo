@@ -4,7 +4,6 @@ globals [used-drawing-layer]
 
 
 to load-movie
-  yoshi:movie-open-player
   yoshi:movie-open file-name world-width world-height 
   set seek-pos 0
 end
@@ -367,7 +366,7 @@ contrast
 contrast
 0
 2
-1
+0.16
 0.1
 1
 NIL
@@ -382,7 +381,7 @@ brightness
 brightness
 -1
 1
-0
+0.31
 0.1
 1
 NIL
@@ -397,7 +396,7 @@ hue
 hue
 -1
 1
-0
+-0.92
 0.1
 1
 NIL
@@ -412,7 +411,7 @@ saturation
 saturation
 0
 2
-1
+1.71
 0.1
 1
 NIL

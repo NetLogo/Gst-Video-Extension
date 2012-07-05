@@ -316,8 +316,8 @@ public strictfp class Capture {
 			// Sink
 			appSink = (AppSink)ElementFactory.make("appsink", null);
 			appSink.set("max-buffers", 1);
+			appSink.set("drop", true);
 			
-			Element capsfilter = ElementFactory.make("capsfilter", "caps");
 			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=32, framerate=30/1," +  
 											  "pixel-aspect-ratio=480/640", (int)width, (int)height);
 			Caps filterCaps = Caps.fromString(capsString);
@@ -427,8 +427,6 @@ public strictfp class Capture {
 			//	Thread.sleep(30);
 				
 			//	int[] data = currentFrameBuffer.array();
-				
-				Buffer buffer = appSink.pullBuffer();
 							
 				// From:
 				// http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
@@ -440,6 +438,8 @@ public strictfp class Capture {
 				BufferedImage originalImage = new BufferedImage(origWidth, origHeight, BufferedImage.TYPE_INT_ARGB);
 			    originalImage.setRGB(0, 0, origWidth, origHeight, imageData, 0, origWidth);
 				*/
+				
+				Buffer buffer = appSink.pullBuffer();
 				
 				IntBuffer intBuf = buffer.getByteBuffer().asIntBuffer();
 				int[] imageData = new int[intBuf.capacity()];
@@ -461,6 +461,7 @@ public strictfp class Capture {
 				}
 				
 				frameCount++;
+				buffer.dispose();
 			
 				return Yoshi.getBufferedImage(imageData, width, height);
 				
