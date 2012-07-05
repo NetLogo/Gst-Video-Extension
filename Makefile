@@ -53,7 +53,7 @@ LIB_FILE=$(LIB_TYPE).tar
 
 JAR_REPO=http://ccl.northwestern.edu/devel/
 
-SRCS=$(shell find src/ -type f -name '*.java')
+SRCS=$(shell find src -type f -name '*.java')
 
 $(JAR_NAME).jar $(PACK_NAME): $(SRCS) $(GST_JAR) $(GST_PACK) $(JNA_JAR) $(JNA_PACK) $(LIB_DIR)$(LIB_TYPE) manifest.txt
 	mkdir -p classes
