@@ -31,32 +31,6 @@ class LibraryPath {
   // This method returns the folder inside which the gstreamer library folder
   // is located.
   String get() {
-    URL url = this.getClass().getResource("LibraryPath.class");
-    if (url != null) {
-      // Convert URL to string, taking care of spaces represented by the "%20"
-      // string.
-      String path = url.toString().replace("%20", " ");
-      int n0 = path.indexOf('/');
-
-      int n1 = -1;
-        
-      if (Platform.isLinux()) {
-        return "";
-      } else {
-        n1 = path.indexOf("video.jar");
-        if (Platform.isWindows()) {
-          // In Windows, path string starts with "jar file/C:/..."
-          // so the substring up to the first / is removed.
-          n0++;
-        }
-      }
-
-      if ((-1 < n0) && (-1 < n1)) {
-        return path.substring(n0, n1);
-      } else {
-        return "";
-      }
-    }
-    return "";
+    return "/Applications/NetLogo 5.0.1/extensions/yoshi/lib";
   }
 }
