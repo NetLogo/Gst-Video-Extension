@@ -75,12 +75,24 @@ public strictfp class Yoshi extends DefaultClassManager {
 			("movie-time", new Movie.CurrentTime());
 		primitiveManager.addPrimitive
 			("movie-playing?", new Movie.IsPlaying());
+		primitiveManager.addPrimitive
+			("movie-has-new-frame?", new Movie.HasNewFrame());
+			
 	}
 
 	public void unload(ExtensionManager em) throws ExtensionException {
 		
-		Movie.unload();
-		Capture.unload();
+		try {
+			Movie.unload();
+		} catch (NoClassDefFoundError e) {
+			System.out.println("Movie wasn't loaded for some reason");
+		}
+		
+		try {
+			Capture.unload();
+		} catch (NoClassDefFoundError e) {
+			System.out.println("Capture wasn't loaded for some reason");
+		}
 		
 		/*
 		// Since native libraries cannot be loaded in more than one classloader at once

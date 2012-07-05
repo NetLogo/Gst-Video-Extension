@@ -37,6 +37,11 @@ public strictfp class Movie {
 	private static float width, height;
 	private static Bin sink;
 	
+	private static Element fpsCountOverlay;
+	
+	private static AppSink appSink;
+	private static boolean frameAvailable;
+	
 	
 //	private static javax.swing.JFrame playerFrame;
 //	private static QDGraphics graphics;
@@ -62,6 +67,37 @@ public strictfp class Movie {
 		public String getAgentClassString() {
 			return "O";
 		}
+		
+		private void installCallbacks() {
+			Bus playerBus = player.getBus();
+			
+			playerBus.connect(new Bus.ERROR() {
+				public void errorMessage(GstObject source, int code, String message) {
+					System.out.println("Error occurred: " + message);
+				}
+			});
+
+			playerBus.connect(new Bus.STATE_CHANGED() {
+				public void stateChanged(GstObject source, State old, State current, State pending) {
+					if (source == player) {
+						System.out.println("Pipeline state changed from " + old + " to " + current);
+					}
+				}
+			});
+
+			playerBus.connect(new Bus.EOS() {
+				public void endOfStream(GstObject source) {
+					System.out.println("Finished playing file");
+					player.setState(State.PAUSED);
+				}
+			});
+			
+			player.connect(new Element.PAD_ADDED() {
+				public void padAdded(Element e, final Pad p) {
+					System.out.println("PAD ADDED: " + p);
+				}
+			});
+		}
 
 		public void perform(Argument[] args, Context context) throws ExtensionException, LogoException {
 			
@@ -80,14 +116,67 @@ public strictfp class Movie {
 				String filename = context.attachCurrentDirectory(args[0].getString());
 				java.io.File file = new java.io.File(filename);
 
-				if (player == null)
-					throw new ExtensionException("No player is currently open.");
-				
-				System.err.println("file://" + filename);
-				
-				player.setState(State.NULL);
-				player.set("uri", "file://" + filename);
+				if (player == null) {
+					player = new PlayBin2("player");
 
+					installCallbacks();
+
+					sink = new Bin();
+
+					sink.connect(new Element.PAD_ADDED() {
+						public void padAdded(Element e, final Pad p) {
+							System.out.println("PAD ADDED: " + p);
+						}
+					});
+
+					appSink = (AppSink)ElementFactory.make("appsink", null);
+
+					Element conv = ElementFactory.make("ffmpegcolorspace", null);
+					Element scale = ElementFactory.make("videoscale", null);
+					Element capsfilter = ElementFactory.make("capsfilter", null);
+					Element caps = ElementFactory.make("capsfilter", null);
+					
+					// FPS textoverlay
+					fpsCountOverlay = ElementFactory.make("textoverlay", null);
+					fpsCountOverlay.set("text", "FPS: --");
+					fpsCountOverlay.set("font-desc", "normal 32");
+					fpsCountOverlay.set("halign", "right");
+					fpsCountOverlay.set("valign", "top");
+
+					sink.addMany	(scale, caps, conv, fpsCountOverlay, appSink);
+
+					String capsString = String.format("video/x-raw-rgb, width=%d, height=%d", (int)width, (int)height);
+					Caps sizeCaps = Caps.fromString(capsString);
+					caps.setCaps(sizeCaps);
+
+					if (!scale.link(caps))
+						System.out.println("Problem with scale->caps");
+					if (!caps.link(conv))
+						System.out.println("Problem with caps->conv");
+					if (!conv.link(fpsCountOverlay))
+						System.out.println("Problem with conv->overlay");
+
+					List<Pad> pads = scale.getSinkPads();
+					Pad sinkPad = pads.get(0);
+
+					GhostPad ghost = new GhostPad("sink", sinkPad);
+					sink.addPad(ghost);
+
+					// Snippet from http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
+					Caps some_caps = new Caps("video/x-raw-rgb"
+									+ ", bpp=32, depth=32, framerate=30/1, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255");
+					if (!Element.linkPadsFiltered(fpsCountOverlay, "src", appSink, "sink", some_caps)) {
+						throw new ExtensionException("Failed linking ffmpegcolorspace with appsink");
+					}
+
+					player.setVideoSink(sink);
+				
+					System.err.println("file://" + filename);
+				
+					player.setState(State.NULL);
+					player.set("uri", "file://" + filename);
+				}
+				
 				/*
 				Runnable runnable = new Runnable() {
 					public void run() {
@@ -136,7 +225,7 @@ public strictfp class Movie {
 			System.err.println("Starting movie (in theory...)");
 			player.setState(State.PLAYING);
 			
-			System.out.println(sink.getState());
+	//		System.out.println(sink.getState());
 			
 		}
 	}
@@ -172,79 +261,7 @@ public strictfp class Movie {
 			return "O";
 		}
 		
-		private void installCallbacks() {
-			Bus playerBus = player.getBus();
-			
-			playerBus.connect(new Bus.ERROR() {
-				public void errorMessage(GstObject source, int code, String message) {
-					System.out.println("Error occurred: " + message);
-				}
-			});
-
-			playerBus.connect(new Bus.STATE_CHANGED() {
-				public void stateChanged(GstObject source, State old, State current, State pending) {
-					if (source == player) {
-						System.out.println("Pipeline state changed from " + old + " to " + current);
-					}
-				}
-			});
-
-			playerBus.connect(new Bus.EOS() {
-				public void endOfStream(GstObject source) {
-					System.out.println("Finished playing file");
-				}
-			});
-		}
-
 		public void perform(Argument[] args, Context context) throws ExtensionException, LogoException {
-			/*
-			if (player == null) {
-				throw new ExtensionException("there is no movie loaded");
-			}
-			*/
-			
-			if (player == null) {
-				player = new PlayBin2("player");
-				
-				final RGBDataAppSink rgbSink = new RGBDataAppSink("rgb", 
-					new RGBDataAppSink.Listener() {
-						public void rgbFrame(int w, int h, IntBuffer buffer) {
-							currentFrameBuffer = buffer;
-							width = w;
-							height = h;
-						}
-					}
-				);
-				
-				installCallbacks();
-				
-				/*
-				sink = new Bin();
-				
-				Element scale = ElementFactory.make("videoscale", "scaler");
-				Element capsfilter = ElementFactory.make("capsfilter", "caps");
-				
-				List<Pad> pads = scale.getSinkPads();
-				Pad sinkPad = pads.get(0);
-				
-				System.out.println("sinkPad: " + sinkPad);
-				
-				GhostPad ghost = new GhostPad("sink", sinkPad);
-				sink.addPad(ghost);
-				
-				Caps filterCaps = Caps.fromString("video/x-raw-rgb, width=" + (int)width + ", height=" + (int)height);
-				capsfilter.setCaps(filterCaps);
-				
-				Element conv = ElementFactory.make("ffmpegcolorspace", null);
-				
-				sink.addMany(scale, capsfilter, conv, rgbSink);
-				Element.linkMany(scale, capsfilter, conv, rgbSink);
-				*/
-		//		player.setVideoSink(sink);
-					
-				player.setVideoSink(rgbSink);	
-				
-			}
 			
 			/*
 			try {
@@ -274,6 +291,21 @@ public strictfp class Movie {
 			return new Boolean(player.isPlaying());
 		}
 	}
+	
+	public static class HasNewFrame extends DefaultReporter {
+		public Syntax getSyntax() {
+			return Syntax.reporterSyntax(Syntax.BooleanType());
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+		
+		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
+			return new Boolean(frameAvailable);
+		}
+	}
+	
 
 	public static class StopMovie extends DefaultCommand {
 		
@@ -366,6 +398,9 @@ public strictfp class Movie {
 
 	public static class Image extends DefaultReporter {
 	
+		private static long prevTime;
+		private static int frameCount;
+	
 		public Syntax getSyntax() {
 			return Syntax.reporterSyntax(new int[]{}, Syntax.WildcardType());
 		}
@@ -381,8 +416,40 @@ public strictfp class Movie {
 			//	System.out.println(buff);
 			//	IntBuffer intBuffer = ((ByteBuffer) buff.getByteBuffer().rewind()).asIntBuffer();
 				
-				int[] data = currentFrameBuffer.array();				
-				return Yoshi.getBufferedImage(data, (int)width, (int)height);
+		//		int[] data = currentFrameBuffer.array();
+		
+				if (appSink == null)
+					throw new ExtensionException("No sink");
+				
+				Buffer buffer = appSink.pullBuffer();
+				
+				if (buffer == null)
+					throw new ExtensionException("No Buffer");
+					
+				Structure structure = buffer.getCaps().getStructure(0);
+				int buff_height = structure.getInteger("height");
+				int buff_width = structure.getInteger("width");
+				
+				IntBuffer intBuf = buffer.getByteBuffer().asIntBuffer();
+				int[] imageData = new int[intBuf.capacity()];
+				intBuf.get(imageData, 0, imageData.length);
+				
+				if (prevTime == 0)
+					prevTime = System.currentTimeMillis();
+					
+				if (System.currentTimeMillis() - prevTime >= 1000) {
+					
+					fpsCountOverlay.set("text", "FPS: " + frameCount);
+					
+					prevTime = System.currentTimeMillis();
+					frameCount = 0;		
+				}
+				
+				frameCount++;
+				
+				buffer.dispose();
+								
+				return Yoshi.getBufferedImage(imageData, buff_width, buff_height);
 				
 			} catch (Exception e) {
 				e.printStackTrace();
