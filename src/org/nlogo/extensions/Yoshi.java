@@ -14,6 +14,7 @@ import org.nlogo.api.LogoException;
 import java.awt.image.*;
 
 import org.gstreamer.*;
+import processing.video.Video;
 
 public strictfp class Yoshi extends DefaultClassManager {
 	
@@ -22,7 +23,8 @@ public strictfp class Yoshi extends DefaultClassManager {
 		
 		String args[] = {"--gst-plugin-spew"};
 		
-		Gst.init("Yoshi", args);
+		//Gst.init("Yoshi", args);
+		Video.init(args);
 		// first check that we can find the quicktime jar
 		// if we can't it throws an extension exception ev 3/3/09
 		em.getFile("yoshi/gstreamer-java-1.5.jar");

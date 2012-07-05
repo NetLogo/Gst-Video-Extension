@@ -307,11 +307,11 @@ public strictfp class Capture {
  			balance = ElementFactory.make("videobalance", null);
 			
 			// FPS textoverlay
-			fpsCountOverlay = ElementFactory.make("textoverlay", null);
-			fpsCountOverlay.set("text", "FPS: --");
-			fpsCountOverlay.set("font-desc", "normal 32");
-			fpsCountOverlay.set("halign", "right");
-			fpsCountOverlay.set("valign", "top");
+			//fpsCountOverlay = ElementFactory.make("textoverlay", null);
+			//fpsCountOverlay.set("text", "FPS: --");
+			//fpsCountOverlay.set("font-desc", "normal 32");
+			//fpsCountOverlay.set("halign", "right");
+			//fpsCountOverlay.set("valign", "top");
 			
 			// Sink
 			appSink = (AppSink)ElementFactory.make("appsink", null);
@@ -323,8 +323,8 @@ public strictfp class Capture {
 			Caps filterCaps = Caps.fromString(capsString);
 			appSink.setCaps(filterCaps);
 			
-			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
-			Element.linkMany      (webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
+			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, appSink);
+			Element.linkMany      (webcamSource, conv, videofilter, scale, balance, appSink);
 			
 			
 			// Bus callbacks
@@ -454,7 +454,7 @@ public strictfp class Capture {
 					
 				if (System.currentTimeMillis() - prevTime >= 1000) {
 					
-					fpsCountOverlay.set("text", "FPS: " + frameCount);
+					//fpsCountOverlay.set("text", "FPS: " + frameCount);
 					
 					prevTime = System.currentTimeMillis();
 					frameCount = 0;		

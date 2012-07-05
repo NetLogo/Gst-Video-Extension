@@ -53,15 +53,15 @@ LIB_FILE=$(LIB_TYPE).tar
 
 JAR_REPO=http://ccl.northwestern.edu/devel/
 
-SRCS=$(wildcard src/*.java)
+SRCS=$(shell find src/ -type f -name '*.java')
 
-$(JAR_NAME).jar $(PACK_NAME): $(SRCS) $(GST_JAR) $(GST_PACK) $(JNA_JAR) $(JNA_PACK) $(LIB_TYPE) manifest.txt
+$(JAR_NAME).jar $(PACK_NAME): $(SRCS) $(GST_JAR) $(GST_PACK) $(JNA_JAR) $(JNA_PACK) $(LIB_DIR)$(LIB_TYPE) manifest.txt
 	mkdir -p classes
 	$(JAVA_HOME)/bin/javac -g -encoding us-ascii -source 1.5 -target 1.5 -classpath $(NETLOGO)/NetLogoLite.jar$(COLON)$(GST_JAR)$(COLON)$(JNA_JAR)$(COLON)gst-video.jar -d classes $(SRCS)
 	jar cmf manifest.txt $(JAR_NAME) -C classes .
 	pack200 --modification-time=latest --effort=9 --strip-debug --no-keep-file-order --unknown-attribute=strip $(PACK_NAME) $(JAR_NAME)
 
-$(LIB_TYPE):
+$(LIB_DIR)$(LIB_TYPE):
 	mkdir -p lib
 	curl -f -s -S $(JAR_REPO)$(LIB_EXT)$(LIB_FILE) -o $(LIB_DIR)$(LIB_FILE)
 	tar -C $(LIB_DIR) -xvzf $(LIB_DIR)$(LIB_FILE)
