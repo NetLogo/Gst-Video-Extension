@@ -31,6 +31,6 @@ class LibraryPath {
   // This method returns the folder inside which the gstreamer library folder
   // is located.
   String get() {
-    return "/Applications/NetLogo 5.0.1/extensions/yoshi/lib";
+    return "extensions/yoshi/lib";
   }
 }
