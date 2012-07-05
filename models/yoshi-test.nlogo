@@ -247,10 +247,10 @@ NIL
 1
 
 BUTTON
-938
-106
-1138
-139
+937
+128
+1140
+161
 Start Webcam
 start-webcam
 NIL
@@ -264,10 +264,10 @@ NIL
 1
 
 BUTTON
-938
-142
-1137
-175
+937
+162
+1140
+195
 Stop Webcam
 stop-webcam
 NIL
@@ -281,10 +281,10 @@ NIL
 1
 
 BUTTON
-937
-202
-1137
-235
+939
+246
+1139
+279
 NIL
 cam-mirror-to-patches
 T
@@ -298,10 +298,10 @@ NIL
 1
 
 BUTTON
-937
-237
-1137
-270
+939
+280
+1139
+313
 NIL
 cam-mirror-to-drawing
 T
@@ -347,10 +347,10 @@ NIL
 1
 
 SWITCH
-937
-281
-1136
-314
+941
+325
+1140
+358
 camera-stretch
 camera-stretch
 1
@@ -358,10 +358,10 @@ camera-stretch
 -1000
 
 SLIDER
-989
-341
-1022
-491
+997
+379
+1030
+529
 contrast
 contrast
 0
@@ -373,10 +373,10 @@ NIL
 VERTICAL
 
 SLIDER
-1026
-342
-1059
-492
+1034
+380
+1067
+530
 brightness
 brightness
 -1
@@ -388,10 +388,10 @@ NIL
 VERTICAL
 
 SLIDER
-1064
-341
-1097
-491
+1072
+379
+1105
+529
 hue
 hue
 -1
@@ -403,10 +403,10 @@ NIL
 VERTICAL
 
 SLIDER
-1102
-341
-1135
-491
+1110
+379
+1143
+529
 saturation
 saturation
 0
@@ -418,10 +418,10 @@ NIL
 VERTICAL
 
 BUTTON
-989
-498
-1136
-531
+997
+536
+1144
+569
 NIL
 reset-fx\n
 NIL
@@ -475,10 +475,10 @@ Camera
 1
 
 BUTTON
-989
-533
-1136
-566
+997
+571
+1144
+604
 NIL
 random-fx
 NIL
@@ -489,6 +489,36 @@ NIL
 NIL
 NIL
 NIL
+1
+
+TEXTBOX
+940
+107
+1011
+129
+Controls:
+14
+0.0
+1
+
+TEXTBOX
+941
+226
+1091
+244
+Mirroring options:
+14
+0.0
+1
+
+TEXTBOX
+966
+379
+992
+397
+FX:
+14
+0.0
 1
 
 @#$#@#$#@
