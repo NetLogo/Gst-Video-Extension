@@ -6,11 +6,32 @@ ifeq ($(origin NETLOGO), undefined)
   NETLOGO=../..
 endif
 
+ARCH=32
+OS=invalid
+
 ifneq (,$(findstring CYGWIN,$(shell uname -s)))
+
   COLON=\;
   JAVA_HOME := `cygpath -up "$(JAVA_HOME)"`
+  OS=windows
+
+  ifneq (,$(findstring WOW64,$(shell uname -s)))
+    ARCH=64
+  endif
+
 else
+
   COLON=:
+
+  # This OS/arch gymnastics can go away when this transitions to SBT
+  ifneq (,$(findstring Darwin,$(shell uname)))
+    OS=macosx
+  endif
+
+  ifneq (,$(findstring 64,$(shell uname -m)))
+    ARCH=64
+  endif
+
 endif
 
 EXT_NAME=yoshi
@@ -25,15 +46,26 @@ JNA_NAME=jna
 JNA_JAR=$(JNA_NAME).jar
 JNA_PACK=$(JNA_JAR).pack.gz
 
+LIB_EXT=gstreamer/
+LIB_DIR=lib/
+LIB_TYPE=$(OS)$(ARCH)
+LIB_FILE=$(LIB_TYPE).tar
+
 JAR_REPO=http://ccl.northwestern.edu/devel/
 
 SRCS=$(wildcard src/*.java)
 
-$(JAR_NAME).jar $(PACK_NAME): $(SRCS) $(GST_JAR) $(GST_PACK) $(JNA_JAR) $(JNA_PACK) manifest.txt
+$(JAR_NAME).jar $(PACK_NAME): $(SRCS) $(GST_JAR) $(GST_PACK) $(JNA_JAR) $(JNA_PACK) $(LIB_TYPE) manifest.txt
 	mkdir -p classes
-	$(JAVA_HOME)/bin/javac -g -encoding us-ascii -source 1.5 -target 1.5 -classpath $(NETLOGO)/NetLogoLite.jar$(COLON)$(GST_JAR)$(COLON)$(JNA_JAR) -d classes $(SRCS)
+	$(JAVA_HOME)/bin/javac -g -encoding us-ascii -source 1.5 -target 1.5 -classpath $(NETLOGO)/NetLogoLite.jar$(COLON)$(GST_JAR)$(COLON)$(JNA_JAR)$(COLON)gst-video.jar -d classes $(SRCS)
 	jar cmf manifest.txt $(JAR_NAME) -C classes .
 	pack200 --modification-time=latest --effort=9 --strip-debug --no-keep-file-order --unknown-attribute=strip $(PACK_NAME) $(JAR_NAME)
+
+$(LIB_TYPE):
+	mkdir -p lib
+	curl -f -s -S $(JAR_REPO)$(LIB_EXT)$(LIB_FILE) -o $(LIB_DIR)$(LIB_FILE)
+	tar -C $(LIB_DIR) -xvzf $(LIB_DIR)$(LIB_FILE)
+	rm $(LIB_DIR)$(LIB_FILE)
 
 $(GST_JAR) $(GST_PACK):
 	curl -f -s -S $(JAR_REPO)$(GST_JAR) -o $(GST_JAR)
