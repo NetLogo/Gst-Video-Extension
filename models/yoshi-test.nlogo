@@ -32,7 +32,7 @@ end
 to mov-mirror-to-drawing
   if (yoshi:movie-playing?) [
     bitmap:copy-to-drawing yoshi:movie-image 0 0
-    update-slider
+    if (yoshi:movie-playing?) [update-slider]
     display
   ]
 end

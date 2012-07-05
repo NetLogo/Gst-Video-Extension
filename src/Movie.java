@@ -37,6 +37,8 @@ public strictfp class Movie {
 	private static float width, height;
 	private static Bin sink;
 	
+	private static Element fpsCountOverlay;
+	
 	private static AppSink appSink;
 	private static boolean frameAvailable;
 	
@@ -133,8 +135,15 @@ public strictfp class Movie {
 					Element scale = ElementFactory.make("videoscale", null);
 					Element capsfilter = ElementFactory.make("capsfilter", null);
 					Element caps = ElementFactory.make("capsfilter", null);
+					
+					// FPS textoverlay
+					fpsCountOverlay = ElementFactory.make("textoverlay", null);
+					fpsCountOverlay.set("text", "FPS: --");
+					fpsCountOverlay.set("font-desc", "normal 32");
+					fpsCountOverlay.set("halign", "right");
+					fpsCountOverlay.set("valign", "top");
 
-					sink.addMany	(scale, caps, conv, appSink);
+					sink.addMany	(scale, caps, conv, fpsCountOverlay, appSink);
 
 					String capsString = String.format("video/x-raw-rgb, width=%d, height=%d", (int)width, (int)height);
 					Caps sizeCaps = Caps.fromString(capsString);
@@ -144,6 +153,8 @@ public strictfp class Movie {
 						System.out.println("Problem with scale->caps");
 					if (!caps.link(conv))
 						System.out.println("Problem with caps->conv");
+					if (!conv.link(fpsCountOverlay))
+						System.out.println("Problem with conv->overlay");
 
 					List<Pad> pads = scale.getSinkPads();
 					Pad sinkPad = pads.get(0);
@@ -154,7 +165,7 @@ public strictfp class Movie {
 					// Snippet from http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
 					Caps some_caps = new Caps("video/x-raw-rgb"
 									+ ", bpp=32, depth=32, framerate=30/1, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255");
-					if (!Element.linkPadsFiltered(conv, "src", appSink, "sink", some_caps)) {
+					if (!Element.linkPadsFiltered(fpsCountOverlay, "src", appSink, "sink", some_caps)) {
 						throw new ExtensionException("Failed linking ffmpegcolorspace with appsink");
 					}
 
@@ -387,6 +398,9 @@ public strictfp class Movie {
 
 	public static class Image extends DefaultReporter {
 	
+		private static long prevTime;
+		private static int frameCount;
+	
 		public Syntax getSyntax() {
 			return Syntax.reporterSyntax(new int[]{}, Syntax.WildcardType());
 		}
@@ -419,6 +433,19 @@ public strictfp class Movie {
 				IntBuffer intBuf = buffer.getByteBuffer().asIntBuffer();
 				int[] imageData = new int[intBuf.capacity()];
 				intBuf.get(imageData, 0, imageData.length);
+				
+				if (prevTime == 0)
+					prevTime = System.currentTimeMillis();
+					
+				if (System.currentTimeMillis() - prevTime >= 1000) {
+					
+					fpsCountOverlay.set("text", "FPS: " + frameCount);
+					
+					prevTime = System.currentTimeMillis();
+					frameCount = 0;		
+				}
+				
+				frameCount++;
 				
 				buffer.dispose();
 								
