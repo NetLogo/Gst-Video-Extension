@@ -20,7 +20,7 @@ public strictfp class Yoshi extends DefaultClassManager {
 	public void runOnce(org.nlogo.api.ExtensionManager em) throws ExtensionException {
 		// Init GStreamer
 		
-		String args[] = {"--gst-plugin-spew"};
+		String args[] = {"--gst-enable-gst-debug"};
 		
 		Gst.init("Yoshi", args);
 		// first check that we can find the quicktime jar
@@ -66,15 +66,29 @@ public strictfp class Yoshi extends DefaultClassManager {
 		primitiveManager.addPrimitive
 			("movie-image", new Movie.Image());
 		primitiveManager.addPrimitive
-			("movie-set-time", new Movie.SetTime());
+			("movie-set-time-secs", new Movie.SetTimeSeconds());
 		primitiveManager.addPrimitive
-			("movie-duration", new Movie.MovieDuration());
+			("movie-set-time-millisecs", new Movie.SetTimeMilliseconds());
 		primitiveManager.addPrimitive
-			("movie-time", new Movie.CurrentTime());
+			("movie-duration-secs", new Movie.MovieDurationSeconds());
+		primitiveManager.addPrimitive
+			("movie-duration-millisecs", new Movie.MovieDurationMilliseconds());
+		primitiveManager.addPrimitive
+			("movie-time-secs", new Movie.CurrentTimeSeconds());
+		primitiveManager.addPrimitive
+			("movie-time-millisecs", new Movie.CurrentTimeMilliseconds());
 		primitiveManager.addPrimitive
 			("movie-playing?", new Movie.IsPlaying());
 		primitiveManager.addPrimitive
-			("movie-has-new-frame?", new Movie.HasNewFrame());
+			("movie-set-stretches", new Movie.SetStrechToFillScreen());
+		primitiveManager.addPrimitive
+			("movie-set-contrast", new Movie.SetContrast());
+		primitiveManager.addPrimitive
+			("movie-set-brightness", new Movie.SetBrightness());
+		primitiveManager.addPrimitive
+			("movie-set-hue", new Movie.SetHue());
+		primitiveManager.addPrimitive
+			("movie-set-saturation", new Movie.SetSaturation());
 			
 	}
 

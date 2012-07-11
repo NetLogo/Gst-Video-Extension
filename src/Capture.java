@@ -323,6 +323,13 @@ public strictfp class Capture {
 			Caps filterCaps = Caps.fromString(capsString);
 			appSink.setCaps(filterCaps);
 			
+	//		Element faceDetect = ElementFactory.make("facedetect", null);
+	//		faceDetect.set("display", true);
+	//		faceDetect.set("profile", "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml");
+			
+	//		Element conv0 = ElementFactory.make("ffmpegcolorspace", null);
+	//		Element conv1 = ElementFactory.make("ffmpegcolorspace", null);
+			
 			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
 			Element.linkMany      (webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
 			
