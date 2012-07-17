@@ -20,7 +20,8 @@ public strictfp class Yoshi extends DefaultClassManager {
 	public void runOnce(org.nlogo.api.ExtensionManager em) throws ExtensionException {
 		// Init GStreamer
 		
-		String args[] = {"--gst-enable-gst-debug"};
+		String args[] = {"--gst-debug-level=2"};
+	//	String args[] = {""};
 		
 		Gst.init("Yoshi", args);
 		// first check that we can find the quicktime jar
@@ -52,6 +53,10 @@ public strictfp class Yoshi extends DefaultClassManager {
 			("camera-set-hue", new Capture.SetHue());
 		primitiveManager.addPrimitive
 			("camera-set-saturation", new Capture.SetSaturation());
+		primitiveManager.addPrimitive
+			("camera-start-recording", new Capture.StartRecording());
+		primitiveManager.addPrimitive
+			("camera-stop-recording", new Capture.StopRecording());
 		
 		primitiveManager.addPrimitive
 			("movie-open", new Movie.OpenMovie());
@@ -89,6 +94,10 @@ public strictfp class Yoshi extends DefaultClassManager {
 			("movie-set-hue", new Movie.SetHue());
 		primitiveManager.addPrimitive
 			("movie-set-saturation", new Movie.SetSaturation());
+		primitiveManager.addPrimitive
+			("movie-set-frame-cache-size", new Movie.SetFrameCacheSize());
+		primitiveManager.addPrimitive
+			("movie-debug", new Movie.DebugCommand());
 			
 	}
 

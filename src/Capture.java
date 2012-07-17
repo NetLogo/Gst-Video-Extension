@@ -16,6 +16,8 @@ import org.gstreamer.Buffer;
 import org.gstreamer.lowlevel.*;
 import org.gstreamer.elements.*;
 
+import org.gstreamer.elements.RGBDataFileSink;
+
 import java.nio.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +27,7 @@ import java.io.File;
 import java.lang.reflect.*;
 
 
+import java.io.File;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
@@ -40,6 +43,9 @@ public strictfp class Capture {
 	
 	private static AppSink appSink;
 	
+	private static RGBDataFileSink recorder;
+	private static boolean recording;
+	
 	/*
 	private static SequenceGrabber capture;
 	private static QDGraphics graphics;
@@ -49,10 +55,15 @@ public strictfp class Capture {
 		
 		if (cameraPipeline != null) {
 			cameraPipeline.setState(State.NULL);
+			cameraPipeline.dispose();
 			cameraPipeline = null;
 		}
 		
+		scale.dispose();
+		balance.dispose();
 		scale = balance = null;
+		
+		appSink.dispose();
 		appSink = null;
 		
 		fpsCountOverlay = null;
@@ -69,6 +80,48 @@ public strictfp class Capture {
 			throw new ExtensionException(e.getMessage());
 		}
 		*/
+	}
+	
+	public static class StartRecording extends DefaultCommand {
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{Syntax.StringType(), Syntax.NumberType(), Syntax.NumberType()});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+		
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			double patchSize = context.getAgent().world().patchSize();
+			float width = (float) (args[1].getDoubleValue() * patchSize);
+			float height = (float) (args[2].getDoubleValue() * patchSize);   
+			
+			String filename = args[0].getString();
+			
+			File file = new File(filename);
+		//	recorder = new RGBDataFileSink("Recorder", (int)width, (int)height, 30, encoder, propNames, propValues, muxer, file);
+			
+			recorder.start();
+			recording = true;
+			
+			
+			
+		}
+	}
+	
+	public static class StopRecording extends DefaultCommand {
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			recorder.stop();
+			recording = false;
+		}
 	}
 	
 	public static class SetStrechToFillScreen extends DefaultCommand {
@@ -297,8 +350,8 @@ public strictfp class Capture {
 			// Conversion
 			Element conv = ElementFactory.make("ffmpegcolorspace", null);
 			Element videofilter = ElementFactory.make("capsfilter", null);
-			videofilter.setCaps(Caps.fromString("video/x-raw-rgb, width=640, height=480"
-							+ ", bpp=32, depth=32, framerate=30/1, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255"));
+			videofilter.setCaps(Caps.fromString("video/x-raw-rgb"
+							+ ", bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255"));
 							
 			// Scale
 			scale = ElementFactory.make("videoscale", null);
@@ -318,7 +371,7 @@ public strictfp class Capture {
 			appSink.set("max-buffers", 1);
 			appSink.set("drop", true);
 			
-			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=32, framerate=30/1," +  
+			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=24," +  
 											  "pixel-aspect-ratio=480/640", (int)width, (int)height);
 			Caps filterCaps = Caps.fromString(capsString);
 			appSink.setCaps(filterCaps);
@@ -345,6 +398,7 @@ public strictfp class Capture {
 				public void stateChanged(GstObject source, State old, State current, State pending) {
 					if (source == cameraPipeline) {
 						System.out.println("Pipeline state changed from " + old + " to " + current);
+						
 					}
 				}
 			});
@@ -412,49 +466,15 @@ public strictfp class Capture {
 			*/
 			
 			try {
-				/**
-				capture.idle();
-				capture.update(null);
-				PixMap map = graphics.getPixMap();
-				RawEncodedImage image = map.getPixelData();
-				int intsPerRow = image.getRowBytes() / 4;
-				int height = graphics.getBounds().getHeight();
-
-				int[] data = new int[intsPerRow * height];
-				image.copyToArray(0, data, 0, data.length);
-
-				return QTJExtension.getBufferedImage(data, intsPerRow, height);
-				*/
-				
-				/*
-				Buffer buffer = (Buffer)cameraPipeline.get("frame");
-				int[] data = (int[]) buffer.asIntBuffer().array();
-				*/
-				
-			//	Thread.sleep(30);
-				
-			//	int[] data = currentFrameBuffer.array();
-							
-				// From:
-				// http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
-				/*
-				Structure structure = buffer.getCaps().getStructure(0);
-		 		int origHeight = structure.getInteger("height");
-		    	int origWidth = structure.getInteger("width");
-		
-				BufferedImage originalImage = new BufferedImage(origWidth, origHeight, BufferedImage.TYPE_INT_ARGB);
-			    originalImage.setRGB(0, 0, origWidth, origHeight, imageData, 0, origWidth);
-				*/
-				
 				Buffer buffer = appSink.pullBuffer();
-				
-				IntBuffer intBuf = buffer.getByteBuffer().asIntBuffer();
-				int[] imageData = new int[intBuf.capacity()];
-				intBuf.get(imageData, 0, imageData.length);
 				
 				Structure structure = buffer.getCaps().getStructure(0);
 				int height = structure.getInteger("height");
 				int width = structure.getInteger("width");
+				
+				IntBuffer intBuf = buffer.getByteBuffer().asIntBuffer();
+				int[] imageData = new int[intBuf.capacity()];
+				intBuf.get(imageData, 0, imageData.length);
 		
 				if (prevTime == 0)
 					prevTime = System.currentTimeMillis();

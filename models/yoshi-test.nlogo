@@ -17,8 +17,8 @@ to pause-movie
 end
 
 to seek-to-current-pos
-  let new-pos (seek-pos / 100) * yoshi:movie-duration
-  yoshi:movie-set-time new-pos
+  let new-pos (seek-pos / 100) * yoshi:movie-duration-millisecs
+  yoshi:movie-set-time-millisecs new-pos
 end
 
 to mov-mirror-to-patches
@@ -149,7 +149,7 @@ INPUTBOX
 247
 123
 file-name
-../videos/video_lowres.mov
+../videos/car-kick.mp4
 1
 0
 String
@@ -363,7 +363,7 @@ SWITCH
 358
 camera-stretch
 camera-stretch
-0
+1
 1
 -1000
 
@@ -376,7 +376,7 @@ contrast
 contrast
 0
 2
-1.14
+1
 0.1
 1
 NIL
@@ -391,7 +391,7 @@ brightness
 brightness
 -1
 1
-0.15
+0
 0.1
 1
 NIL
@@ -406,7 +406,7 @@ hue
 hue
 -1
 1
-0.69
+0
 0.1
 1
 NIL
@@ -421,7 +421,7 @@ saturation
 saturation
 0
 2
-0.04
+1
 0.1
 1
 NIL
@@ -537,7 +537,7 @@ BUTTON
 245
 465
 open-player
-yoshi:movie-open-player 500 500 \n
+yoshi:movie-open-player world-width world-height \n
 NIL
 1
 T
@@ -563,6 +563,33 @@ NIL
 NIL
 NIL
 NIL
+1
+
+BUTTON
+13
+568
+164
+601
+NIL
+yoshi:movie-debug
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+TEXTBOX
+18
+550
+168
+568
+Debug:
+11
+0.0
 1
 
 @#$#@#$#@
