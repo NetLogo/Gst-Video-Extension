@@ -102,6 +102,7 @@ to cam-update-fx
 end
 
 to mov-update-fx
+  yoshi:movie-set-looping looping
   yoshi:movie-set-stretches camera-stretch
   yoshi:movie-set-contrast contrast
   yoshi:movie-set-brightness brightness
@@ -565,13 +566,24 @@ NIL
 NIL
 1
 
+SWITCH
+12
+511
+116
+544
+looping
+looping
+1
+1
+-1000
+
 BUTTON
-13
-568
-164
-601
-NIL
-yoshi:movie-debug
+17
+569
+113
+602
+start recording
+yoshi:camera-start-recording rec-filename world-width world-height
 NIL
 1
 T
@@ -582,15 +594,33 @@ NIL
 NIL
 1
 
-TEXTBOX
-18
-550
-168
-568
-Debug:
-11
-0.0
+BUTTON
+117
+570
+180
+603
+stop
+yoshi:camera-stop-recording
+NIL
 1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+INPUTBOX
+16
+606
+186
+666
+rec-filename
+test.mkv
+1
+0
+String
 
 @#$#@#$#@
 ## WHAT IS IT?

@@ -97,6 +97,8 @@ public strictfp class Yoshi extends DefaultClassManager {
 		primitiveManager.addPrimitive
 			("movie-set-frame-cache-size", new Movie.SetFrameCacheSize());
 		primitiveManager.addPrimitive
+			("movie-set-looping", new Movie.SetLooping());
+		primitiveManager.addPrimitive
 			("movie-debug", new Movie.DebugCommand());
 			
 	}
