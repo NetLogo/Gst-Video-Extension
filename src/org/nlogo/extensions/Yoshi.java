@@ -21,7 +21,8 @@ public strictfp class Yoshi extends DefaultClassManager {
 	public void runOnce(org.nlogo.api.ExtensionManager em) throws ExtensionException {
 		// Init GStreamer
 		
-		String args[] = {"--gst-plugin-spew"};
+		String args[] = {"--gst-debug-level=2"};
+	//	String args[] = {""};
 		
 		//Gst.init("Yoshi", args);
 		Video.init(args);
@@ -54,6 +55,10 @@ public strictfp class Yoshi extends DefaultClassManager {
 			("camera-set-hue", new Capture.SetHue());
 		primitiveManager.addPrimitive
 			("camera-set-saturation", new Capture.SetSaturation());
+		primitiveManager.addPrimitive
+			("camera-start-recording", new Capture.StartRecording());
+		primitiveManager.addPrimitive
+			("camera-stop-recording", new Capture.StopRecording());
 		
 		primitiveManager.addPrimitive
 			("movie-open", new Movie.OpenMovie());
@@ -68,15 +73,35 @@ public strictfp class Yoshi extends DefaultClassManager {
 		primitiveManager.addPrimitive
 			("movie-image", new Movie.Image());
 		primitiveManager.addPrimitive
-			("movie-set-time", new Movie.SetTime());
+			("movie-set-time-secs", new Movie.SetTimeSeconds());
 		primitiveManager.addPrimitive
-			("movie-duration", new Movie.MovieDuration());
+			("movie-set-time-millisecs", new Movie.SetTimeMilliseconds());
 		primitiveManager.addPrimitive
-			("movie-time", new Movie.CurrentTime());
+			("movie-duration-secs", new Movie.MovieDurationSeconds());
+		primitiveManager.addPrimitive
+			("movie-duration-millisecs", new Movie.MovieDurationMilliseconds());
+		primitiveManager.addPrimitive
+			("movie-time-secs", new Movie.CurrentTimeSeconds());
+		primitiveManager.addPrimitive
+			("movie-time-millisecs", new Movie.CurrentTimeMilliseconds());
 		primitiveManager.addPrimitive
 			("movie-playing?", new Movie.IsPlaying());
 		primitiveManager.addPrimitive
-			("movie-has-new-frame?", new Movie.HasNewFrame());
+			("movie-set-stretches", new Movie.SetStrechToFillScreen());
+		primitiveManager.addPrimitive
+			("movie-set-contrast", new Movie.SetContrast());
+		primitiveManager.addPrimitive
+			("movie-set-brightness", new Movie.SetBrightness());
+		primitiveManager.addPrimitive
+			("movie-set-hue", new Movie.SetHue());
+		primitiveManager.addPrimitive
+			("movie-set-saturation", new Movie.SetSaturation());
+		primitiveManager.addPrimitive
+			("movie-set-frame-cache-size", new Movie.SetFrameCacheSize());
+		primitiveManager.addPrimitive
+			("movie-set-looping", new Movie.SetLooping());
+		primitiveManager.addPrimitive
+			("movie-debug", new Movie.DebugCommand());
 			
 	}
 
