@@ -389,7 +389,7 @@ public strictfp class Movie {
 				balance = ElementFactory.make("videobalance", null);
 				Element rate = ElementFactory.make("videorate", null);
 				
-				sinkBin.addMany(scale, sizeFilter, balance, conv, fpsCountOverlay, rate, appSink);
+				sinkBin.addMany(scale, sizeFilter, balance, conv, rate, appSink);
 				
 				if (!scale.link(sizeFilter))
 					System.out.println("Problem with scale->caps");
@@ -397,10 +397,10 @@ public strictfp class Movie {
 					System.out.println("Problem with sizeFilter->balance");
 				if (!balance.link(conv))
 					System.out.println("Problem with caps->conv");
-				if (!conv.link(fpsCountOverlay))
+				if (!conv.link(rate))
 					System.out.println("Problem with conv->overlay");
-				if (!fpsCountOverlay.link(rate))
-					System.out.println("Problem with overlay->rate");
+				//if (!fpsCountOverlay.link(rate))
+				//	System.out.println("Problem with overlay->rate");
 					
 				List<Pad> pads = scale.getSinkPads();
 				Pad sinkPad = pads.get(0);
