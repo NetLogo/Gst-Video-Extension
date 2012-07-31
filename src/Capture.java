@@ -21,6 +21,7 @@
 
 package org.nlogo.extensions.yoshi;
 
+// Extensions API
 import org.nlogo.api.DefaultClassManager;
 import org.nlogo.api.PrimitiveManager;
 import org.nlogo.api.Syntax;
@@ -31,14 +32,16 @@ import org.nlogo.api.Argument;
 import org.nlogo.api.ExtensionException;
 import org.nlogo.api.LogoException;
 
+// GStreamer
 import org.gstreamer.*;
 import org.gstreamer.Bus;
 import org.gstreamer.Buffer;
 import org.gstreamer.lowlevel.*;
 import org.gstreamer.elements.*;
+import org.gstreamer.interfaces.Property;
+import org.gstreamer.interfaces.PropertyProbe;
 
-import org.gstreamer.elements.RGBDataFileSink;
-
+// Java
 import java.nio.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +49,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.io.File;
 import java.lang.reflect.*;
-
 
 import java.io.File;
 import java.awt.*;
@@ -57,62 +59,39 @@ import java.awt.image.*;
 public strictfp class Capture {
 	
 	private static Pipeline cameraPipeline;
-	private static IntBuffer currentFrameBuffer;
-	private static Element scale, balance;
 	
-	private static Element fpsCountOverlay;
+	// Webcam
+	private static Element webcamSource;
 	
+	// Core pipeline elements
+	private static Element scale, balance, conv;
+	
+	// Appsink
 	private static AppSink appSink;
 	
+	// Edge detection
+	private static boolean isDetectingEdges;
+	
+	private static Element edgeDetectConverter;
+	private static Element edgeDetect;
+	
+	// Debug FPS (not currently in use)
+	private static Element fpsCountOverlay;
+	
+	// Recording
 	private static RGBDataFileSink recorder;
 	private static boolean recording;
 	
 	private static Fraction framerate;
 	
-	private static final int WORST = 0;
-	private static final int LOW = 1;
-	private static final int MEDIUM = 2;
-	private static final int HIGH = 3;
-	private static final int BEST = 4;
-	
-	/*
-	private static SequenceGrabber capture;
-	private static QDGraphics graphics;
-	*/
-
 	public static void unload() throws ExtensionException {
 		
+		// Dispoe of the pipeline
 		if (cameraPipeline != null) {
 			cameraPipeline.setState(State.NULL);
 			cameraPipeline.dispose();
 			cameraPipeline = null;
 		}
-		
-		if (scale != null)
-			scale.dispose();
-		if (balance != null)
-			balance.dispose();
-			
-		scale = balance = null;
-		
-		if (appSink != null)
-			appSink.dispose();
-		appSink = null;
-		
-		fpsCountOverlay = null;
-		
-		/*
-		try {
-			if (capture != null) {
-				capture.stop();
-				capture = null;
-				graphics = null;
-				QTSession.close();
-			}
-		} catch (quicktime.std.StdQTException e) {
-			throw new ExtensionException(e.getMessage());
-		}
-		*/
 	}
 	
 	public static class StartRecording extends DefaultCommand {
@@ -124,14 +103,28 @@ public strictfp class Capture {
 			return "O";
 		}
 		
-		public static final int THEORA = 0;
-		public static final int XVID = 1;
-		public static final int X264 = 2;
-		public static final int DIRAC = 3;
-		public static final int MJPEG = 4;
-		public static final int MJPEG2K = 5;
+		/*
+		This code is mostly from the opensource video library GSVideo by Andres Colubri
+		*/
+		
+		private static final int THEORA = 0;
+		private static final int XVID = 1;
+		private static final int X264 = 2;
+		private static final int DIRAC = 3;
+		private static final int MJPEG = 4;
+		private static final int MJPEG2K = 5;
+		
+		private static final int WORST = 0;
+		private static final int LOW = 1;
+		private static final int MEDIUM = 2;
+		private static final int HIGH = 3;
+		private static final int BEST = 4;
 	
 		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			
+			if (recording)
+				throw new ExtensionException("A recording seems to already be in progress");
+			
 			double patchSize = context.getAgent().world().patchSize();
 			float width = (float) (args[1].getDoubleValue() * patchSize);
 			float height = (float) (args[2].getDoubleValue() * patchSize);   
@@ -291,7 +284,8 @@ public strictfp class Capture {
 			
 			if (framerate != null)
 				fps = framerate.getNumerator() / framerate.getDenominator();
-			
+				
+			System.out.println("Recording with FPS of " + fps);
 						
 			File file = new File(filename);
 			recorder = new RGBDataFileSink("Recorder", (int)width, (int)height, fps, encoder, propNames, propValues, muxer, file);
@@ -407,6 +401,83 @@ public strictfp class Capture {
 		}
 	}
 	
+	public static class StartEdgeDetection extends DefaultCommand {
+		
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			
+			// Set up edgedetection if we're not already detecting edges
+			if (!isDetectingEdges) {
+				
+				edgeDetectConverter = ElementFactory.make("ffmpegcolorspace", null);
+				edgeDetect = ElementFactory.make("edgedetect", null);
+			
+				List<Pad> srcPads = webcamSource.getSrcPads();
+				Pad srcPad = srcPads.get(0);
+			
+				srcPad.setBlocked(true);
+			
+				webcamSource.unlink(conv);
+			
+				cameraPipeline.addMany(edgeDetectConverter, edgeDetect);
+				Element.linkMany(webcamSource, edgeDetectConverter, edgeDetect, conv);
+			
+				edgeDetectConverter.setState(cameraPipeline.getState());
+				edgeDetect.setState(cameraPipeline.getState());
+			
+				srcPad.setBlocked(false);
+			
+				isDetectingEdges = true;
+			}
+		}
+	}
+	
+	public static class StopEdgeDetection extends DefaultCommand {
+		
+		public Syntax getSyntax() {
+			return Syntax.commandSyntax(new int[]{});
+		}
+
+		public String getAgentClassString() {
+			return "O";
+		}
+
+		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
+			
+			if (isDetectingEdges) {
+				
+				List<Pad> srcPads = webcamSource.getSrcPads();
+				Pad srcPad = srcPads.get(0);
+			
+				srcPad.setBlocked(true);
+			
+				Element.unlinkMany(webcamSource, edgeDetectConverter, edgeDetect, conv);
+				
+				edgeDetectConverter.setState(State.NULL);
+				edgeDetect.setState(State.NULL);
+				cameraPipeline.removeMany(edgeDetectConverter, edgeDetect);
+				
+				edgeDetectConverter.dispose();
+				edgeDetect.dispose();
+				
+				edgeDetectConverter = null;
+				edgeDetect = null;
+			
+				webcamSource.link(conv);
+		
+				srcPad.setBlocked(false);
+				isDetectingEdges = false;
+			}
+		}
+	}
+	
 	
 
 	public static class StartCamera extends DefaultCommand {
@@ -421,30 +492,14 @@ public strictfp class Capture {
 
 		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
 			
+			if (cameraPipeline == null)
+				throw new ExtensionException("There is no open camera session");
+			
 			double patchSize = context.getAgent().world().patchSize();
 			float width = (float) (args[0].getDoubleValue() * patchSize);
 			float height = (float) (args[1].getDoubleValue() * patchSize);
 			
 			cameraPipeline.setState(State.PLAYING);
-			
-			/*
-			try {
-				QDRect rect = new QDRect(width, height);
-				SGVideoChannel channel = getVideoChannel(rect);
-				initializeChannel(channel, rect);
-			} catch (quicktime.std.StdQTException e) {
-				
-				String msg = "Failed to open a session.	 QuickTime may not be installed properly. 
-								Or your camera may not be connected or on.";
-								
-				if (System.getProperty("os.name").startsWith("Windows")) {
-					msg += " Perhaps WinVDig is not installed.";
-				}
-				throw new ExtensionException(msg);
-			} catch (quicktime.QTException e) {
-				throw new ExtensionException(e.getMessage());
-			}
-			*/
 		}
 	}
 	
@@ -465,45 +520,22 @@ public strictfp class Capture {
 			return new Boolean(false);
 		}
 	}
+	
+	public static class IsRecording extends DefaultReporter {
+		public Syntax getSyntax() {
+			return Syntax.reporterSyntax(Syntax.BooleanType());
+		}
 
-	/*
-	private static SGVideoChannel getVideoChannel(QDRect rect) throws quicktime.QTException, ExtensionException {
+		public String getAgentClassString() {
+			return "O";
+		}
 		
-		unload();
-
-		QTSession.open();
-
-		// workaround for intel macs (from imagej)
-		graphics = quicktime.util.EndianOrder.isNativeLittleEndian()
-			? new QDGraphics(QDConstants.k32BGRAPixelFormat, rect)
-			: new QDGraphics(QDGraphics.kDefaultPixelFormat, rect);
-
-		capture = new SequenceGrabber();
-		capture.setGWorld(graphics, null);
-
-		return new SGVideoChannel(capture);
+		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
+			if (cameraPipeline != null)
+				return new Boolean(recording);
+			return new Boolean(false);
+		}
 	}
-	*/
-
-	/*
-	private static void initializeChannel(SGVideoChannel channel, QDRect rect) throws quicktime.QTException {
-		
-		channel.setBounds(rect);
-		channel.setUsage(quicktime.std.StdQTConstants.seqGrabRecord |
-						quicktime.std.StdQTConstants.seqGrabPreview |
-						quicktime.std.StdQTConstants.seqGrabPlayDuringRecord);
-		
-		channel.setFrameRate(0);
-		channel.setCompressorType(quicktime.std.StdQTConstants.kComponentVideoCodecType);
-
-		QTFile movieFile = new QTFile(new java.io.File("NoFile"));
-		capture.setDataOutput(null, quicktime.std.StdQTConstants.seqGrabDontMakeMovie);
-		capture.prepare(true, true);
-		capture.startRecord();
-		capture.idle();
-		capture.update(null);
-	}
-	*/
 
 	public static class SelectCamera extends DefaultCommand {
 		
@@ -514,17 +546,72 @@ public strictfp class Capture {
 		public String getAgentClassString() {
 			return "O";
 		}
+		
+		// System detection from http://www.mkyong.com/java/how-to-detect-os-in-java-systemgetpropertyosname/
+		private static boolean isWindows() {
+			String os = System.getProperty("os.name").toLowerCase();
+			// windows
+			return (os.indexOf("win") >= 0);
+		}
+
+		private static boolean isMac() {
+			String os = System.getProperty("os.name").toLowerCase();
+			// Mac
+			return (os.indexOf("mac") >= 0);
+		}
+
+		private static boolean isUnix() {
+			String os = System.getProperty("os.name").toLowerCase();
+			// linux or unix
+			return (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0);
+		}
+		
+		private static boolean is32Bit() {
+			String arch = System.getProperty("os.arch");
+			return arch.contains("x86") && false;
+		}
+		
+		private static boolean is64Bit() {
+			String arch = System.getProperty("os.arch");
+			return arch.contains("64");
+		}
 
 		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
 	
-			// From Processing's source
-			final String capturePlugin = "qtkitvideosrc";
-			final String devicePropertyName = "device-name"; 
-			final String indexPropertyName = "device-index";
+			// From GSVideo's source
+			String os = System.getProperty("os.name");
 			
-			int frameRateNumerator = 30;
-			int frameRateDenominator = 1;
-	
+			String capturePlugin = null;
+			String devicePropertyName = null;
+			String indexPropertyName = null;
+			
+			if (isWindows()) {
+				capturePlugin = "ksvideosrc";
+				devicePropertyName = "device-name";
+				indexPropertyName = "device-index";
+			} else if (isMac()) {
+				if (is32Bit()) {
+					capturePlugin = "osxvideosrc";
+					devicePropertyName = "device";
+					// osxvideosrc doesn't have an index property. 
+					indexPropertyName = "";
+				} else if (is64Bit()) {
+					capturePlugin = "qtkitvideosrc";
+					indexPropertyName = "device-index";
+				} else {
+					// Hmmmmm....
+				}
+			} else if (isUnix()) {
+				capturePlugin = "v4l2src";
+				// The "device" property in v4l2src expects the device location (/dev/video0, etc). 
+				// v4l2src has "device-name", which requires the human-readable name, but how to obtain
+				// in linux?.
+				devicePropertyName = "device";
+				indexPropertyName = "device-fd";
+			} else {
+				throw new ExtensionException("Your system does not seem to be supported (supported: Mac OS X, Windows, Linux/Unix)");
+			}
+				
 			double patchSize = context.getAgent().world().patchSize();
 			float width = (float) (args[0].getDoubleValue() * patchSize);
 			float height = (float) (args[1].getDoubleValue() * patchSize);
@@ -537,48 +624,57 @@ public strictfp class Capture {
 			// Pipeline construction based on Processing
 			// http://code.google.com/p/processing/source/browse/trunk/processing/java/libraries/video/src/processing/video/Capture.java
 
+			if (cameraPipeline != null) {
+				cameraPipeline.setState(State.NULL);
+				cameraPipeline.dispose();
+				cameraPipeline = null;
+			}
+
 			// Pipeline
 			cameraPipeline = new Pipeline("camera-capture");
 			
-			cameraPipeline.getBus().connect(new Bus.TAG() {
-				public void tagsFound(GstObject source, TagList tagList) {
-					for (String tagName : tagList.getTagNames()) {
-						// Each tag can have multiple values, so print them all.
-						for (Object tagData : tagList.getValues(tagName)) {
-							System.out.printf("[%s]=%s\n", tagName, tagData);
-						}
-					}
+			cameraPipeline.getBus().connect(new Bus.ERROR() {
+				public void errorMessage(GstObject source, int code, String message) {
+					System.out.println("Error occurred: " + message);
 				}
 			});
 			
 			cameraPipeline.getBus().connect(new Bus.STATE_CHANGED() {
 				public void stateChanged(GstObject source, State old, State current, State pending) {
-					System.out.println("Pipeline state changed from " + old + " to " + current);
+					
+					if (source == cameraPipeline) {
+						
+						System.out.println("Pipeline state changed from " + old + " to " + current + " (pending:" + pending + ")");
 				
-					if (old == State.READY && current == State.PAUSED) {
-						// Something
-						List<Pad> sinkPads = appSink.getSinkPads();
-						Pad sinkPad = sinkPads.get(0);
+						if (old == State.READY && current == State.PAUSED) {
+							// Something
+							List<Pad> sinkPads = appSink.getSinkPads();
+							Pad sinkPad = sinkPads.get(0);
 
-						Caps sinkCaps = sinkPad.getNegotiatedCaps();
-						System.out.println(sinkCaps);
+							Caps sinkCaps = sinkPad.getNegotiatedCaps();
+							System.out.println(sinkCaps);
 
-						Structure structure = sinkCaps.getStructure(0);
+							Structure structure = sinkCaps.getStructure(0);
 
-						framerate = structure.getFraction("framerate");
-						System.out.println("Camera FPS: " + framerate.getNumerator() + " / " + framerate.getDenominator());
-					}	
+							framerate = structure.getFraction("framerate");
+							System.out.println("Camera FPS: " + framerate.getNumerator() + " / " + framerate.getDenominator());
+							
+						}	
+					}
+					
 				}
 			});
 			
 			// Source
-			Element webcamSource = ElementFactory.make(capturePlugin, null);
-
+			webcamSource = ElementFactory.make(capturePlugin, null);
+			
+			System.out.println("Camera index: " + webcamSource.get(indexPropertyName));
+			
 			// Conversion
-			Element conv = ElementFactory.make("ffmpegcolorspace", null);
+			conv = ElementFactory.make("ffmpegcolorspace", null);
 			Element videofilter = ElementFactory.make("capsfilter", null);
-			videofilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321"
-							+ ", bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"));
+			videofilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321,"
+							+ "red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"));
 							
 			// Scale
 			scale = ElementFactory.make("videoscale", null);
@@ -587,56 +683,28 @@ public strictfp class Capture {
  			balance = ElementFactory.make("videobalance", null);
 			
 			// FPS textoverlay
+			/*
 			fpsCountOverlay = ElementFactory.make("textoverlay", null);
 			fpsCountOverlay.set("text", "FPS: --");
 			fpsCountOverlay.set("font-desc", "normal 32");
 			fpsCountOverlay.set("halign", "right");
 			fpsCountOverlay.set("valign", "top");
+			*/
 			
 			// Sink
 			appSink = (AppSink)ElementFactory.make("appsink", null);
 			appSink.set("max-buffers", 1);
 			appSink.set("drop", true);
 			
-			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=24," +  
+			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d," +  
 											  "pixel-aspect-ratio=480/640", (int)width, (int)height);
 			Caps filterCaps = Caps.fromString(capsString);
 			appSink.setCaps(filterCaps);
 			
-	//		Element faceDetect = ElementFactory.make("facedetect", null);
-	//		faceDetect.set("display", true);
-	//		faceDetect.set("profile", "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml");
+			// Add and link
+			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, appSink);
+			Element.linkMany      (webcamSource, conv, videofilter, scale, balance, appSink);
 			
-	//		Element conv0 = ElementFactory.make("ffmpegcolorspace", null);
-	//		Element conv1 = ElementFactory.make("ffmpegcolorspace", null);
-			
-			cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
-			Element.linkMany      (webcamSource, conv, videofilter, scale, balance, fpsCountOverlay, appSink);
-			
-			
-			// Bus callbacks
-			cameraPipeline.getBus().connect(new Bus.ERROR() {
-				public void errorMessage(GstObject source, int code, String message) {
-					System.out.println("Error occurred: " + message);
-				}
-			});
-
-			cameraPipeline.getBus().connect(new Bus.STATE_CHANGED() {
-				public void stateChanged(GstObject source, State old, State current, State pending) {
-					if (source == cameraPipeline) {
-						System.out.println("Pipeline state changed from " + old + " to " + current);
-						
-					}
-				}
-			});
-
-				/*
-			Object selected = javax.swing.JOptionPane.showInputDialog(null, 
-												"Select an input device: ", 
-												"QTJ Extension",
-												javax.swing.JOptionPane.QUESTION_MESSAGE,
-												null, options, options[0]);
-			*/
 				
 		}
 	}
@@ -652,19 +720,12 @@ public strictfp class Capture {
 		}
 
 		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
-			/*
-			if (capture == null) {
+			
+			if (cameraPipeline == null)
 				throw new ExtensionException("There is no open camera session");
-			}
-			*/
+		
 			try {
 				cameraPipeline.setState(State.NULL);
-				/*
-				capture.stop();
-				capture = null;
-				graphics = null;
-				QTSession.close();
-				*/
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new ExtensionException(e.getMessage());
@@ -686,51 +747,53 @@ public strictfp class Capture {
 		}
 
 		public Object report(Argument args[], Context context) throws ExtensionException, LogoException {
-			/*
-			if (capture == null) {
+			
+			if (cameraPipeline == null)
 				throw new ExtensionException("There is no open camera session");
-			}
-			*/
 			
 			try {
+				// Pull a buffer (or block until one is available or EOS)
 				Buffer buffer = appSink.pullBuffer();
 				
+				// Get the buffer's dimensions
 				Structure structure = buffer.getCaps().getStructure(0);
 				int height = structure.getInteger("height");
 				int width = structure.getInteger("width");
 				
+				// Copy the buffer's contents to a java IntBuffer
 				IntBuffer intBuf = buffer.getByteBuffer().asIntBuffer();
 				int[] imageData = new int[intBuf.capacity()];
 				intBuf.get(imageData, 0, imageData.length);
 				
-				
-			//	Buffer blackBuffer = new Buffer(width * height * 4);
-				
-				
-				if (recording) {
+				// If currently recording, push buffer off to RGBDataFileSink
+				if (recording)
 					recorder.pushRGBFrame(buffer);
-				}
 		
 				if (prevTime == 0)
 					prevTime = System.currentTimeMillis();
 					
 				if (System.currentTimeMillis() - prevTime >= 1000) {
 					
-					fpsCountOverlay.set("text", "FPS: " + frameCount);
+					if (fpsCountOverlay != null)
+						fpsCountOverlay.set("text", "FPS: " + frameCount);
 					
 					prevTime = System.currentTimeMillis();
 					frameCount = 0;
 					
+					/*
 					if (recorder != null)
 						System.out.println("Dropped frames: " + recorder.getNumDroppedFrames());
+					*/
 				}
 				
 				frameCount++;
 				
-		//		blackBuffer.dispose();
+				// If we push the buffer to the recorder (RGBDataFileSink) it
+				// will dispose of the buffer for us.
 				if (!recording)
 					buffer.dispose();
 			
+				// Return a java BufferedImage
 				return Yoshi.getBufferedImage(imageData, width, height);
 				
 			} catch (Exception e) {

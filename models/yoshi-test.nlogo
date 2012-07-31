@@ -1,6 +1,6 @@
 extensions [yoshi bitmap]
 
-globals [used-drawing-layer]
+globals [used-drawing-layer current-pos]
 
 
 to load-movie
@@ -14,11 +14,15 @@ end
 
 to pause-movie
   yoshi:movie-stop
+  set current-pos seek-pos
 end
 
 to seek-to-current-pos
-  let new-pos (seek-pos / 100) * yoshi:movie-duration-millisecs
-  yoshi:movie-set-time-millisecs new-pos
+  if (current-pos != seek-pos) [
+    let new-pos (seek-pos / 100) * yoshi:movie-duration-millisecs
+    yoshi:movie-set-time-millisecs new-pos
+    set current-pos seek-pos
+  ]
 end
 
 to mov-mirror-to-patches
@@ -31,12 +35,16 @@ to mov-mirror-to-patches
 end
 
 to mov-mirror-to-drawing
-  if (yoshi:movie-playing?) [
+  ;if (yoshi:movie-playing?) [
     mov-update-fx
     bitmap:copy-to-drawing yoshi:movie-image 0 0
-    if (yoshi:movie-playing?) [update-slider]
+    ifelse (yoshi:movie-playing?) [
+      update-slider
+    ] [
+      seek-to-current-pos
+    ]
     display
-  ]
+  ;]
 end
 
 to update-slider
@@ -83,7 +91,6 @@ to cam-mirror-to-drawing
     display
     set used-drawing-layer true
   ]
-  
 end
 
 to random-fx
@@ -94,6 +101,12 @@ to random-fx
 end
 
 to cam-update-fx
+  ifelse (edge-detection) [
+    yoshi:camera-start-edgedetection
+  ] [
+    yoshi:camera-stop-edgedetection
+  ]
+  
   yoshi:camera-set-stretches camera-stretch
   yoshi:camera-set-contrast contrast
   yoshi:camera-set-brightness brightness
@@ -111,6 +124,7 @@ to mov-update-fx
 end
 
 to reset-fx
+  set edge-detection false
   set contrast 1
   set brightness 0
   set hue 0
@@ -118,13 +132,13 @@ to reset-fx
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-261
-10
+266
+15
 926
-532
--1
--1
-8.19
+616
+32
+28
+10.0
 1
 10
 1
@@ -134,10 +148,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--59
-20
--39
-20
+-32
+32
+-28
+28
 0
 0
 1
@@ -150,7 +164,7 @@ INPUTBOX
 247
 123
 file-name
-../videos/car-kick.mp4
+../videos/flight.wmv
 1
 0
 String
@@ -326,36 +340,19 @@ NIL
 1
 
 SLIDER
-261
-535
-927
-568
+268
+624
+924
+657
 seek-pos
 seek-pos
 0
 100
-100
+23
 1
 1
 %
 HORIZONTAL
-
-BUTTON
-261
-569
-927
-602
-NIL
-seek-to-current-pos
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 SWITCH
 941
@@ -429,10 +426,10 @@ NIL
 VERTICAL
 
 BUTTON
-997
-536
-1144
-569
+998
+573
+1145
+606
 NIL
 reset-fx\n
 NIL
@@ -486,10 +483,10 @@ Camera
 1
 
 BUTTON
-997
-571
-1144
-604
+998
+608
+1145
+641
 NIL
 random-fx
 NIL
@@ -617,10 +614,21 @@ INPUTBOX
 186
 666
 rec-filename
-test.mkv
+webcam_recording.ogg
 1
 0
 String
+
+SWITCH
+998
+533
+1146
+566
+edge-detection
+edge-detection
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?

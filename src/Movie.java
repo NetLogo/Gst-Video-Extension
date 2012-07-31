@@ -221,6 +221,37 @@ public strictfp class Movie {
 		public void perform(Argument args[], Context context) throws ExtensionException, LogoException {
 			System.out.println("=============== Running debug command(s) ===============");
 			// Debug	
+			System.out.println("Setting up aspect ratio...");
+			// Something
+			List<Pad> sinkPads = sinkBin.getSinkPads();
+			Pad sinkPad = sinkPads.get(0);
+
+			Caps sinkCaps = sinkPad.getNegotiatedCaps();
+			System.out.println(sinkCaps);
+
+			Structure structure = sinkCaps.getStructure(0);
+
+			int width = structure.getInteger("width");
+			int height = structure.getInteger("height");
+
+			System.out.println("video-width: " + width);
+			System.out.println("video-height: " + height);
+
+			sinkPads = scale.getSinkPads();
+			System.out.println("Number of sink pads: " + sinkPads.size());
+			sinkPad = sinkPads.get(0);
+
+			sinkPad.setBlocked(true);
+
+			System.out.println("blocking...");
+
+			String capsString = String.format("video/x-raw-rgb, width=%d, height=%d," 
+			+ "pixel-aspect-ratio=%d/%d", worldWidth, worldHeight, width, height);
+
+			Caps sizeCaps = Caps.fromString(capsString);
+			sizeFilter.setCaps(sizeCaps);
+
+			sinkPad.setBlocked(false);
 		}
 	}
 
@@ -235,69 +266,21 @@ public strictfp class Movie {
 		}
 		
 		private void installCallbacks(Bus bus) {			
-		
-			bus.connect(new Bus.INFO() {
-				public void infoMessage(GstObject source, int code, java.lang.String message) {
-					System.out.println("Code: " + code + " | Message: " + message);
-				}
-			});
-		
-			bus.connect(new Bus.TAG() {
-				public void tagsFound(GstObject source, TagList tagList) {
-					for (String tagName : tagList.getTagNames()) {
-						// Each tag can have multiple values, so print them all.
-						for (Object tagData : tagList.getValues(tagName)) {
-							System.out.printf("[%s]=%s\n", tagName, tagData);
-						}
-					}
-				}
-			});
 			
 			bus.connect(new Bus.ERROR() {
 				public void errorMessage(GstObject source, int code, String message) {
 					System.out.println("Error occurred: " + message + "(" +  code + ")");
 				}
 			});
-			
-
+		
 			bus.connect(new Bus.STATE_CHANGED() {
 				public void stateChanged(GstObject source, State old, State current, State pending) {
 					if (source == player) {
-						System.out.println("Pipeline state changed from " + old + " to " + current);
+						if (old != current)
+							System.out.println("Pipeline state changed from " + old + " to " + current);
 						
 						if (old == State.READY && current == State.PAUSED) {
 							// Something
-							List<Pad> sinkPads = sinkBin.getSinkPads();
-							Pad sinkPad = sinkPads.get(0);
-
-							Caps sinkCaps = sinkPad.getNegotiatedCaps();
-							System.out.println(sinkCaps);
-
-							Structure structure = sinkCaps.getStructure(0);
-
-							int width = structure.getInteger("width");
-							int height = structure.getInteger("height");
-							
-							System.out.println("video-width: " + width);
-							System.out.println("video-height: " + height);
-
-							/*
-							sinkPads = scale.getSrcPads();
-							sinkPad = sinkPads.get(0);
-							
-							sinkPad.setState(State.NULL);
-							sinkPad.setBlocked(true);
-				
-							System.out.println("blocking...");
-							String capsString = String.format("video/x-raw-rgb, width=%d, height=%d", 200, 200);
-							Caps sizeCaps = Caps.fromString(capsString);
-							sizeFilter.setCaps(sizeCaps);
-
-							sinkPad.setBlocked(false);
-							sinkPad.setState(State.PLAYING);
-							*/
-							
-						
 						}
 						
 					}
@@ -307,6 +290,12 @@ public strictfp class Movie {
 			bus.connect(new Bus.EOS() {
 				public void endOfStream(GstObject source) {
 					System.out.println("Finished playing file");
+					
+					if (lastBuffer != null) {
+						lastBuffer.dispose();
+						lastBuffer = null;
+					}
+					
 					if (looping)
 						player.seek(ClockTime.fromSeconds(0));
 					else
@@ -366,41 +355,20 @@ public strictfp class Movie {
 				appSink.set("max-buffers", 1);
 				appSink.set("drop", true);
 				
-				// appSink.set("enable-last-buffer", true);
-
 				conv = ElementFactory.make("ffmpegcolorspace", null);
 			 	scale = ElementFactory.make("videoscale", null);
-
-
+			
 				sizeFilter = ElementFactory.make("capsfilter", null);
 				
 				String capsString = String.format("video/x-raw-rgb, width=%d, height=%d", (int)width, (int)height);
-		//		String capsString = String.format("video/x-raw-rgb, width=%d, height=%d, pixel-aspect-ratio=%d/%d", (int)width, (int)height, 1, 1);
+				
 				Caps sizeCaps = Caps.fromString(capsString);
 				sizeFilter.setCaps(sizeCaps);
 				
-				// FPS textoverlay
-				fpsCountOverlay = ElementFactory.make("textoverlay", null);
-				fpsCountOverlay.set("text", "FPS: --");
-				fpsCountOverlay.set("font-desc", "normal 32");
-				fpsCountOverlay.set("halign", "right");
-				fpsCountOverlay.set("valign", "top");
-				
 				balance = ElementFactory.make("videobalance", null);
-				Element rate = ElementFactory.make("videorate", null);
 				
-				sinkBin.addMany(scale, sizeFilter, balance, conv, fpsCountOverlay, rate, appSink);
-				
-				if (!scale.link(sizeFilter))
-					System.out.println("Problem with scale->caps");
-				if (!sizeFilter.link(balance))
-					System.out.println("Problem with sizeFilter->balance");
-				if (!balance.link(conv))
-					System.out.println("Problem with caps->conv");
-				if (!conv.link(fpsCountOverlay))
-					System.out.println("Problem with conv->overlay");
-				if (!fpsCountOverlay.link(rate))
-					System.out.println("Problem with overlay->rate");
+				sinkBin.addMany(scale, sizeFilter, balance, conv, appSink);
+				Element.linkMany(scale, sizeFilter, balance, conv);
 					
 				List<Pad> pads = scale.getSinkPads();
 				Pad sinkPad = pads.get(0);
@@ -408,16 +376,13 @@ public strictfp class Movie {
 				GhostPad ghost = new GhostPad("sink", sinkPad);
 				sinkBin.addPad(ghost);
 
-				// Snippet from http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
-				Caps some_caps = new Caps("video/x-raw-rgb"
-								+ ", bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255");
+				Caps some_caps = new Caps("video/x-raw-rgb,"
+								+ "red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216,"
+								+ "alpha_mask=(int)255");
 								
-				if (!Element.linkPadsFiltered(rate, "src", appSink, "sink", some_caps)) {
+				if (!Element.linkPadsFiltered(conv, "src", appSink, "sink", some_caps))
 					throw new ExtensionException("Failed linking ffmpegcolorspace with appsink");
-				}
 				
-				
-
 				player.setVideoSink(sinkBin);
 			}
 			
@@ -482,7 +447,8 @@ public strictfp class Movie {
 				throw new ExtensionException("there is no movie open");
 			
 			Double newPos = args[0].getDoubleValue();
-			player.seek(ClockTime.fromMillis(newPos.longValue()));
+			if (!player.seek(ClockTime.fromMillis(newPos.longValue())))
+				throw new ExtensionException("Seek unsuccessful");
 			
 		}
 	}
@@ -559,6 +525,7 @@ public strictfp class Movie {
 				throw new ExtensionException("there is no movie open");
 				
 			player.setState(State.PAUSED);
+			sinkBin.setState(State.PAUSED);
 		}
 	}
 
@@ -577,9 +544,6 @@ public strictfp class Movie {
 			if (player == null)
 				throw new ExtensionException("there is no movie open");
 			
-		//	player.setState(State.NULL);
-		//	player = null;
-		
 			if (playerFrame != null) {
 				playerFrame.dispose();
 				playerFrame = null;
@@ -628,7 +592,6 @@ public strictfp class Movie {
 				throw new ExtensionException("there is no movie open");
 			
 			long duration = player.queryDuration(TimeUnit.MILLISECONDS);
-			
 			return new Double(duration);
 		}
 	}
@@ -647,7 +610,6 @@ public strictfp class Movie {
 				throw new ExtensionException("there is no movie open");
 			
 			long position = player.queryPosition(TimeUnit.SECONDS);
-			
 			return new Double(position);
 		}
 	}
@@ -666,7 +628,6 @@ public strictfp class Movie {
 				throw new ExtensionException("there is no movie open");
 			
 			long position = player.queryPosition(TimeUnit.MILLISECONDS);
-			
 			return new Double(position);
 		}
 	}
@@ -690,9 +651,14 @@ public strictfp class Movie {
 				if (player == null || appSink == null)
 					throw new ExtensionException("either no movie is open or pipeline is not constructed properly");
 				
+				Buffer buffer = null;
+				
 				// Attempt to grab a buffer from the appSink.  If not available or 
 				// EOS has been reached, render and return the most recent buffer (if available)
-				Buffer buffer = appSink.pullBuffer();
+				if (player.getState() == State.PLAYING)
+					buffer = appSink.pullBuffer();
+				else
+					buffer = appSink.pullPreroll();
 			
 				if (buffer == null)
 					buffer = lastBuffer;
@@ -713,7 +679,8 @@ public strictfp class Movie {
 					
 				if (System.currentTimeMillis() - prevTime >= 1000) {
 					
-					fpsCountOverlay.set("text", "FPS: " + frameCount);
+					if (fpsCountOverlay != null)
+						fpsCountOverlay.set("text", "FPS: " + frameCount);
 					
 					prevTime = System.currentTimeMillis();
 					frameCount = 0;		

@@ -57,6 +57,13 @@ public strictfp class Yoshi extends DefaultClassManager {
 			("camera-start-recording", new Capture.StartRecording());
 		primitiveManager.addPrimitive
 			("camera-stop-recording", new Capture.StopRecording());
+		primitiveManager.addPrimitive
+			("camera-is-recording?", new Capture.IsRecording());
+		// Expirimental
+		primitiveManager.addPrimitive
+			("camera-start-edgedetection", new Capture.StartEdgeDetection());
+		primitiveManager.addPrimitive
+			("camera-stop-edgedetection", new Capture.StopEdgeDetection());
 		
 		primitiveManager.addPrimitive
 			("movie-open", new Movie.OpenMovie());
