@@ -1,4 +1,5 @@
 *.jar.pack.gz
 *.jar
+/bin
 /classes
 /videos
