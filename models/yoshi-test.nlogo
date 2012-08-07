@@ -1,6 +1,6 @@
 extensions [yoshi bitmap]
 
-globals [used-drawing-layer current-pos]
+globals [cam-used-drawing-layer mov-used-drawing-layer current-pos]
 
 
 to load-movie
@@ -26,6 +26,12 @@ to seek-to-current-pos
 end
 
 to mov-mirror-to-patches
+  
+  if (mov-used-drawing-layer != 0 and mov-used-drawing-layer) [
+   clear-all
+   set mov-used-drawing-layer false 
+  ]
+  
   if (yoshi:movie-playing?) [
     mov-update-fx
     bitmap:copy-to-pcolors yoshi:movie-image false
@@ -43,6 +49,7 @@ to mov-mirror-to-drawing
     ] [
       seek-to-current-pos
     ]
+    set mov-used-drawing-layer true
     display
   ;]
 end
@@ -72,9 +79,9 @@ end
 
 to cam-mirror-to-patches
   
-  if (used-drawing-layer != 0 and used-drawing-layer) [
+  if (cam-used-drawing-layer != 0 and cam-used-drawing-layer) [
    clear-all
-   set used-drawing-layer false 
+   set cam-used-drawing-layer false 
   ]
   
   if (yoshi:camera-is-rolling?) [
@@ -89,7 +96,7 @@ to cam-mirror-to-drawing
     cam-update-fx
     bitmap:copy-to-drawing yoshi:camera-image 0 0
     display
-    set used-drawing-layer true
+    set cam-used-drawing-layer true
   ]
 end
 
@@ -348,7 +355,7 @@ seek-pos
 seek-pos
 0
 100
-23
+8
 1
 1
 %
@@ -614,7 +621,7 @@ INPUTBOX
 186
 666
 rec-filename
-webcam_recording.ogg
+webcam_recording.mp4
 1
 0
 String
