@@ -79,7 +79,7 @@ public strictfp class Capture {
 	private static Element fpsCountOverlay;
 	
 	// Recording
-	private static RGBDataFileSink recorder;
+	private static RGBDataFileSink2 recorder;
 	private static boolean recording;
 	
 	private static Fraction framerate;
@@ -135,7 +135,7 @@ public strictfp class Capture {
 			String filename = args[0].getString();
 			
 			int codecQuality = MEDIUM;
-			int codecType = THEORA;
+			int codecType = X264;
 
 			String[] propNames = null;
 			Object[] propValues = null;
@@ -288,7 +288,7 @@ public strictfp class Capture {
 			System.out.println("Recording with FPS of " + fps);
 						
 			File file = new File(filename);
-			recorder = new RGBDataFileSink("Recorder", (int)width, (int)height, fps, encoder, propNames, propValues, muxer, file);
+			recorder = new RGBDataFileSink2("Recorder", (int)width, (int)height, fps, encoder, propNames, propValues, muxer, file);
 			
 			recorder.start();
 			
@@ -611,10 +611,12 @@ public strictfp class Capture {
 			} else {
 				throw new ExtensionException("Your system does not seem to be supported (supported: Mac OS X, Windows, Linux/Unix)");
 			}
+			
+			
 				
 			double patchSize = context.getAgent().world().patchSize();
-			float width = (float) (args[0].getDoubleValue() * patchSize);
-			float height = (float) (args[1].getDoubleValue() * patchSize);
+			float width      = (float) (args[0].getDoubleValue() * patchSize);
+			float height     = (float) (args[1].getDoubleValue() * patchSize);
 			
 			System.out.println("======== World Information ========");
 			System.out.println("width:  " + width);
@@ -667,6 +669,10 @@ public strictfp class Capture {
 			
 			// Source
 			webcamSource = ElementFactory.make(capturePlugin, null);
+			
+		//	List<Property> properties = PropertyProbe.wrap(cameraPipeline).getProperties();
+		//	if (properties == null)
+		//		System.out.println("Failed to query properties");
 			
 			System.out.println("Camera index: " + webcamSource.get(indexPropertyName));
 			
