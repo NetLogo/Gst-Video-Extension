@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
-Extension-Name: yoshi
-Class-Manager: org.nlogo.extensions.yoshi.Yoshi
+Extension-Name: gst-video
+Class-Manager: org.nlogo.extensions.gstvideo.GstVideo
 NetLogo-Extension-API-Version: 5.0
