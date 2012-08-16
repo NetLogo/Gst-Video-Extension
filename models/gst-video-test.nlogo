@@ -542,7 +542,7 @@ BUTTON
 245
 465
 open-player
-yoshi:movie-open-player world-width world-height \n
+gst-video:movie-open-player world-width world-height \n
 NIL
 1
 T
@@ -559,7 +559,7 @@ BUTTON
 245
 502
 close-player
-yoshi:movie-close
+gst-video:movie-close
 NIL
 1
 T
