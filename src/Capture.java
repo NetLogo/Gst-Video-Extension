@@ -19,7 +19,7 @@
  * Boston, MA  02111-1307  USA
  */
 
-package org.nlogo.extensions.yoshi;
+package org.nlogo.extensions.gstvideo;
 
 // Extensions API
 import org.nlogo.api.DefaultClassManager;
@@ -79,7 +79,7 @@ public strictfp class Capture {
 	private static Element fpsCountOverlay;
 	
 	// Recording
-	private static RGBDataFileSink2 recorder;
+	private static RGBDataFileSink recorder;
 	private static boolean recording;
 	
 	private static Fraction framerate;
@@ -288,7 +288,7 @@ public strictfp class Capture {
 			System.out.println("Recording with FPS of " + fps);
 						
 			File file = new File(filename);
-			recorder = new RGBDataFileSink2("Recorder", (int)width, (int)height, fps, encoder, propNames, propValues, muxer, file);
+			recorder = new RGBDataFileSink("Recorder", (int)width, (int)height, fps, encoder, propNames, propValues, muxer, file);
 			
 			recorder.start();
 			
@@ -800,7 +800,7 @@ public strictfp class Capture {
 					buffer.dispose();
 			
 				// Return a java BufferedImage
-				return Yoshi.getBufferedImage(imageData, width, height);
+				return GstVideo.getBufferedImage(imageData, width, height);
 				
 			} catch (Exception e) {
 				e.printStackTrace();

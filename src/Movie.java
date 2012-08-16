@@ -1,4 +1,4 @@
-package org.nlogo.extensions.yoshi;
+package org.nlogo.extensions.gstvideo;
 
 // Extensions API
 import org.nlogo.api.DefaultClassManager;
@@ -695,7 +695,7 @@ public strictfp class Movie {
 				
 				lastBuffer = buffer;
 								
-				return Yoshi.getBufferedImage(imageData, bufferWidth, bufferHeight);
+				return GstVideo.getBufferedImage(imageData, bufferWidth, bufferHeight);
 				
 			} catch (Exception e) {
 				e.printStackTrace();
