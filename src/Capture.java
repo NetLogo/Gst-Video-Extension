@@ -566,11 +566,6 @@ public strictfp class Capture {
 			return (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0);
 		}
 		
-		private static boolean is32Bit() {
-			String arch = System.getProperty("os.arch");
-			return arch.contains("x86") && false;
-		}
-		
 		private static boolean is64Bit() {
 			String arch = System.getProperty("os.arch");
 			return arch.contains("64");
@@ -590,7 +585,7 @@ public strictfp class Capture {
 				devicePropertyName = "device-name";
 				indexPropertyName = "device-index";
 			} else if (isMac()) {
-				if (is32Bit()) {
+				if (!is64Bit()) {
 					capturePlugin = "osxvideosrc";
 					devicePropertyName = "device";
 					// osxvideosrc doesn't have an index property. 
