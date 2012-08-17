@@ -135,7 +135,7 @@ public strictfp class Capture {
 			String filename = args[0].getString();
 			
 			int codecQuality = MEDIUM;
-			int codecType = X264;
+			int codecType = THEORA;
 
 			String[] propNames = null;
 			Object[] propValues = null;
