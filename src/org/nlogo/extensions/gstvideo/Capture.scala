@@ -20,7 +20,7 @@
 package org.nlogo.extensions.gstvideo
 
 import java.io.File
-import org.gstreamer.{ Bus, Caps, Element, ElementFactory, Fraction, GstObject, Pipeline, State, TagList }
+import org.gstreamer.{ Bus, Caps, Element, ElementFactory, GstObject, Pipeline, State, TagList }
 import org.gstreamer.elements.{ AppSink, RGBDataFileSink }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
@@ -34,7 +34,6 @@ object Capture {
   private var appSink: AppSink = null
   private var recorder: RGBDataFileSink = null
   private var recording = false
-  private var framerate: Fraction = null
   private final val WORST = 0 //@ ENUM!
   private final val LOW = 1
   private final val MEDIUM = 2
@@ -302,22 +301,18 @@ object Capture {
       })
       cameraPipeline.getBus.connect(new Bus.STATE_CHANGED {
         def stateChanged(source: GstObject, old: State, current: State, pending: State) {
+
           println("Pipeline state changed from " + old + " to " + current)
-          if (old == State.READY && current == State.PAUSED) {
-            val sinkPads = appSink.getSinkPads
-            val sinkPad = sinkPads.get(0)
-            val sinkCaps = sinkPad.getNegotiatedCaps
-            println(sinkCaps)
-            val structure = sinkCaps.getStructure(0)
-            framerate = structure.getFraction("framerate")
-            println("Camera FPS: " + framerate.getNumerator + " / " + framerate.getDenominator)
-          }
+
+          if (old == State.READY && current == State.PAUSED)
+            println(appSink.getSinkPads.get(0).getNegotiatedCaps)
+
         }
       })
       val webcamSource = ElementFactory.make(capturePlugin, null)
       val conv = ElementFactory.make("ffmpegcolorspace", null)
       val videofilter = ElementFactory.make("capsfilter", null)
-      videofilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321" + ", bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"))
+      videofilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"))
       scale = ElementFactory.make("videoscale", null)
       balance = ElementFactory.make("videobalance", null)
       appSink = ElementFactory.make("appsink", null).asInstanceOf[AppSink] //@ Pattern match!
