@@ -296,7 +296,7 @@ object Capture {
 
   class IsRolling extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
-    override def report(args: Array[Argument], context: Context): AnyRef = {
+    override def report(args: Array[Argument], context: Context) : AnyRef = {
       Boolean.box(cameraPipeline != null && cameraPipeline.getState == State.PLAYING)
     }
   }

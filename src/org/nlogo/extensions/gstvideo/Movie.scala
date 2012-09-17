@@ -311,7 +311,7 @@ object Movie {
 
   class MovieDurationSeconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context): AnyRef = {
+    override def report(args: Array[Argument], context: Context) : AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
       val duration = player.queryDuration(TimeUnit.SECONDS)
       Double.box(duration)
@@ -320,7 +320,7 @@ object Movie {
 
   class MovieDurationMilliseconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context): AnyRef = {
+    override def report(args: Array[Argument], context: Context) : AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
       val duration = player.queryDuration(TimeUnit.MILLISECONDS)
       Double.box(duration)
@@ -329,7 +329,7 @@ object Movie {
 
   class CurrentTimeSeconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context): AnyRef = {
+    override def report(args: Array[Argument], context: Context) : AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
       val position = player.queryPosition(TimeUnit.SECONDS)
       Double.box(position)
@@ -338,7 +338,7 @@ object Movie {
 
   class CurrentTimeMilliseconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context): AnyRef = {
+    override def report(args: Array[Argument], context: Context) : AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
       val position = player.queryPosition(TimeUnit.MILLISECONDS)
       Double.box(position)
