@@ -5,3 +5,4 @@
 /lib
 /video
 *.jar.pack*
+.DS_Store
