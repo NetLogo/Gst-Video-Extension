@@ -365,17 +365,11 @@ object Movie {
     }
   }
 
-  object Image {
-    private var prevTime = 0L
-    private var frameCount = 0
-  }
-
   class Image extends DefaultReporter {
     override def getSyntax           = Syntax.reporterSyntax(Array[Int](), Syntax.WildcardType)
     override def getAgentClassString = "O"
     override def report(args: Array[Argument], context: Context): AnyRef = {
       try {
-        import Image._
         if (player == null || appSink == null) throw new ExtensionException("either no movie is open or pipeline is not constructed properly")
         var buffer = appSink.pullBuffer
         if (buffer == null) buffer = lastBuffer
@@ -385,12 +379,6 @@ object Movie {
         val intBuf = buffer.getByteBuffer.asIntBuffer
         val imageData = new Array[Int](intBuf.capacity)
         intBuf.get(imageData, 0, imageData.length)
-        if (prevTime == 0) prevTime = System.currentTimeMillis
-        if (System.currentTimeMillis - prevTime >= 1000) {
-          prevTime = System.currentTimeMillis
-          frameCount = 0
-        }
-        frameCount += 1
         // If a buffer was cached and is not currently being
 				// relied on, dispose it now and cache current buffer
         if (lastBuffer != null && buffer != lastBuffer) lastBuffer.dispose()

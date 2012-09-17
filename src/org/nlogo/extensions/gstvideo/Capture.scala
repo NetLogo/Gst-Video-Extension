@@ -392,17 +392,11 @@ object Capture {
     }
   }
 
-  object Image {
-    private var prevTime = 0L
-    private var frameCount = 0
-  }
-
   class Image extends DefaultReporter {
     override def getSyntax           = Syntax.reporterSyntax(Array[Int](), Syntax.WildcardType)
     override def getAgentClassString = "O"
     override def report(args: Array[Argument], context: Context): AnyRef = {
       try {
-        import Image._
         val buffer = appSink.pullBuffer
         val structure = buffer.getCaps.getStructure(0)
         val height = structure.getInteger("height")
@@ -413,13 +407,6 @@ object Capture {
         if (recording) {
           recorder.pushRGBFrame(buffer)
         }
-        if (prevTime == 0) prevTime = System.currentTimeMillis
-        if (System.currentTimeMillis - prevTime >= 1000) {
-          prevTime = System.currentTimeMillis
-          frameCount = 0
-          if (recorder != null) println("Dropped frames: " + recorder.getNumDroppedFrames)
-        }
-        frameCount += 1
         if (!recording) buffer.dispose()
         Util.getBufferedImage(imageData, width, height)
       }
