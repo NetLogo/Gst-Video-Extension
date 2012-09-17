@@ -19,32 +19,10 @@
  */
 package org.nlogo.extensions.gstvideo
 
-import org.nlogo.api.DefaultClassManager
-import org.nlogo.api.PrimitiveManager
-import org.nlogo.api.Syntax
-import org.nlogo.api.Context
-import org.nlogo.api.DefaultReporter
-import org.nlogo.api.DefaultCommand
-import org.nlogo.api.Argument
-import org.nlogo.api.ExtensionException
-import org.nlogo.api.LogoException
-import org.gstreamer._
-import org.gstreamer.Bus
-import org.gstreamer.Buffer
-import org.gstreamer.lowlevel._
-import org.gstreamer.elements._
-import org.gstreamer.elements.RGBDataFileSink
-import java.nio._
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.Iterator
-import java.util.List
 import java.io.File
-import java.lang.reflect
-import java.io.File
-import java.awt._
-import java.awt.event._
-import java.awt.image._
+import org.gstreamer.{ Bus, Caps, Element, ElementFactory, Fraction, GstObject, Pipeline, State, TagList }
+import org.gstreamer.elements.{ AppSink, RGBDataFileSink }
+import org.nlogo.api.{ Argument, Context, DefaultCommand, DefaultReporter, ExtensionException, Syntax }
 
 object Capture {
   def unload() {
@@ -64,7 +42,6 @@ object Capture {
   }
 
   private var cameraPipeline: Pipeline = null
-  private var currentFrameBuffer: IntBuffer = null
   private var scale: Element = null
   private var balance: Element = null
   private var fpsCountOverlay: Element = null
@@ -338,10 +315,6 @@ object Capture {
     override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       val capturePlugin = "qtkitvideosrc"
-      val devicePropertyName = "device-name"
-      val indexPropertyName = "device-index"
-      val frameRateNumerator = 30
-      val frameRateDenominator = 1
       val patchSize = context.getAgent.world.patchSize
       val width = args(0).getDoubleValue * patchSize
       val height = args(1).getDoubleValue * patchSize

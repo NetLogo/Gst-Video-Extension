@@ -1,17 +1,7 @@
 package org.nlogo.extensions.gstvideo
 
-import org.nlogo.api.DefaultClassManager
-import org.nlogo.api.PrimitiveManager
-import org.nlogo.api.Syntax
-import org.nlogo.api.Context
-import org.nlogo.api.DefaultReporter
-import org.nlogo.api.DefaultCommand
-import org.nlogo.api.Argument
-import org.nlogo.api.ExtensionException
-import org.nlogo.api.ExtensionManager
-import org.nlogo.api.LogoException
-import java.awt.image._
-import org.gstreamer._
+import java.awt.image.{ BufferedImage, DataBufferInt, DirectColorModel, Raster, SampleModel, WritableRaster }
+import org.nlogo.api.{ DefaultClassManager, ExtensionManager, PrimitiveManager }
 import processing.video.Video
 
 object GstVideo {

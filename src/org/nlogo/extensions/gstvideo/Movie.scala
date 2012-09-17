@@ -1,29 +1,16 @@
 package org.nlogo.extensions.gstvideo
 
-// Extensions API
-
-import org.nlogo.api.DefaultClassManager
-import org.nlogo.api.PrimitiveManager
-import org.nlogo.api.Syntax
-import org.nlogo.api.Context
-import org.nlogo.api.DefaultReporter
-import org.nlogo.api.DefaultCommand
-import org.nlogo.api.Argument
-import org.nlogo.api.ExtensionException
-import org.nlogo.api.LogoException
-import org.gstreamer._
-import org.gstreamer.Buffer
-import org.gstreamer.elements._
-import org.gstreamer.swing.VideoComponent
-import org.gstreamer.lowlevel._
-import org.gstreamer.event.EOSEvent
-import javax.swing._
-import java.awt._
-import java.nio.IntBuffer
-import java.io.{IOException, File}
-import java.util.List
-import java.util.Map
+import java.awt.{ BorderLayout, Dimension }
+import java.io.IOException
 import java.util.concurrent.TimeUnit
+import javax.swing.JFrame
+
+import org.gstreamer.{ Bin, Buffer, Bus, Caps, ClockTime, Element, elements, ElementFactory, GhostPad }
+import org.gstreamer.{ GstObject, Pad, State, swing, TagList }
+import elements.{ AppSink, PlayBin2 }
+import swing.VideoComponent
+
+import org.nlogo.api.{ Argument, Context, DefaultCommand, DefaultReporter, ExtensionException, Syntax }
 
 object Movie {
   def unload() {
@@ -34,13 +21,9 @@ object Movie {
     sinkBin = null
   }
 
-  private final val PLAYER_NULL_EXCEPTION_MSG = "no movie appears to be open"
   private var player: PlayBin2 = null
   private var lastBuffer: Buffer = null
   private var looping = false
-  private var frameRateNum = 0
-  private var frameRateDenom = 0
-  private var fpsCountOverlay: Element = null
   private var scale: Element = null
   private var balance: Element = null
   private var sizeFilter: Element = null
