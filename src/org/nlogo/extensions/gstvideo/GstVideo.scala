@@ -22,7 +22,7 @@ class GstVideo extends DefaultClassManager {
   }
 
   override def load(primitiveManager: PrimitiveManager) {
-    primitiveManager.addPrimitive("camera-image",               new Capture.Image)
+    primitiveManager.addPrimitive("camera-image",                   Capture.image)
     primitiveManager.addPrimitive("camera-start",               new Capture.StartCamera)
     primitiveManager.addPrimitive("camera-stop",                new Capture.StopCamera)
     primitiveManager.addPrimitive("camera-is-rolling?",         new Capture.IsRolling)
@@ -34,12 +34,12 @@ class GstVideo extends DefaultClassManager {
     primitiveManager.addPrimitive("camera-set-saturation",      new Capture.SetSaturation)
     primitiveManager.addPrimitive("camera-start-recording",     new Capture.StartRecording)
     primitiveManager.addPrimitive("camera-stop-recording",      new Capture.StopRecording)
+    primitiveManager.addPrimitive("movie-image",                    Movie.image)
     primitiveManager.addPrimitive("movie-open",                 new Movie.OpenMovie)
     primitiveManager.addPrimitive("movie-start",                new Movie.StartMovie)
     primitiveManager.addPrimitive("movie-stop",                 new Movie.StopMovie)
     primitiveManager.addPrimitive("movie-open-player",          new Movie.OpenPlayer)
     primitiveManager.addPrimitive("movie-close",                new Movie.CloseMovie)
-    primitiveManager.addPrimitive("movie-image",                new Movie.Image)
     primitiveManager.addPrimitive("movie-set-time-secs",        new Movie.SetTimeSeconds)
     primitiveManager.addPrimitive("movie-set-time-millisecs",   new Movie.SetTimeMilliseconds)
     primitiveManager.addPrimitive("movie-duration-secs",        new Movie.MovieDurationSeconds)

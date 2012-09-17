@@ -22,7 +22,7 @@ package org.nlogo.extensions.gstvideo
 import java.io.File
 import org.gstreamer.{ Bus, Caps, Element, ElementFactory, Fraction, GstObject, Pipeline, State, TagList }
 import org.gstreamer.elements.{ AppSink, RGBDataFileSink }
-import org.nlogo.api.{ Argument, Context, DefaultCommand, DefaultReporter, ExtensionException, Syntax }
+import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Capture {
   def unload() {
@@ -64,9 +64,8 @@ object Capture {
     final val MJPEG2K = 5
   }
 
-  class StartRecording extends DefaultCommand {
+  class StartRecording extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       import StartRecording._
       val patchSize = context.getAgent.world.patchSize
@@ -169,7 +168,7 @@ object Capture {
         propValues = new Array[AnyRef](2)
 
         // The pass property can take the following values:
-				// (0): cbr              - Constant Bitrate Encoding (default)
+				// (0): cbr              - Constant Bitrate Encoding (Video)
 				// (4): quant            - Constant Quantizer
 				// (5): qual             - Constant Quality
 				// (17): pass1            - VBR Encoding - Pass 1
@@ -236,83 +235,74 @@ object Capture {
     }
   }
 
-  class StopRecording extends DefaultCommand {
+  class StopRecording extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int]())
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       recorder.stop
       recording = false
     }
   }
 
-  class SetStrechToFillScreen extends DefaultCommand {
+  class SetStrechToFillScreen extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       val shouldAddBorders = !(args(0).getBooleanValue)
       scale.set("add-borders", shouldAddBorders)
     }
   }
 
-  class SetContrast extends DefaultCommand {
+  class SetContrast extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= 0 && contrast <= 2) balance.set("contrast", contrast)
-      else throw new ExtensionException("Invalid contrast value: [0, 2] (default is 1)")
+      else throw new ExtensionException("Invalid contrast value: [0, 2] (Video is 1)")
     }
   }
 
-  class SetBrightness extends DefaultCommand {
+  class SetBrightness extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= -1 && contrast <= 1) balance.set("brightness", contrast)
-      else throw new ExtensionException("Invalid brightness value: [-1, 1] (default is 0)")
+      else throw new ExtensionException("Invalid brightness value: [-1, 1] (Video is 0)")
     }
   }
 
-  class SetHue extends DefaultCommand {
+  class SetHue extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= -1 && contrast <= 1) balance.set("hue", contrast)
-      else throw new ExtensionException("Invalid hue value: [-1, 1] (default is 0)")
+      else throw new ExtensionException("Invalid hue value: [-1, 1] (Video is 0)")
     }
   }
 
-  class SetSaturation extends DefaultCommand {
+  class SetSaturation extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= 0 && contrast <= 2) balance.set("saturation", contrast)
-      else throw new ExtensionException("Invalid saturation value: [0, 2] (default is 1)")
+      else throw new ExtensionException("Invalid saturation value: [0, 2] (Video is 1)")
     }
   }
 
-  class StartCamera extends DefaultCommand {
+  class StartCamera extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       cameraPipeline.setState(State.PLAYING)
     }
   }
 
-  class IsRolling extends DefaultReporter {
+  class IsRolling extends VideoReporter {
     override def getSyntax           = Syntax.reporterSyntax(Syntax.BooleanType)
-    override def getAgentClassString = "O"
     override def report(args: Array[Argument], context: Context): AnyRef = {
       Boolean.box(cameraPipeline != null && cameraPipeline.getState == State.PLAYING)
     }
   }
 
-  class SelectCamera extends DefaultCommand {
+  class SelectCamera extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
       val capturePlugin = "qtkitvideosrc"
       val patchSize = context.getAgent.world.patchSize
@@ -378,13 +368,10 @@ object Capture {
     }
   }
 
-  class StopCamera extends DefaultCommand {
+  class StopCamera extends VideoCommand {
     override def getSyntax           = Syntax.commandSyntax(Array[Int]())
-    override def getAgentClassString = "O"
     override def perform(args: Array[Argument], context: Context) {
-      try {
-        cameraPipeline.setState(State.NULL)
-      }
+      try cameraPipeline.setState(State.NULL)
       catch {
         case e: Exception =>
           throw new ExtensionException(e.getMessage)
@@ -392,29 +379,12 @@ object Capture {
     }
   }
 
-  class Image extends DefaultReporter {
-    override def getSyntax           = Syntax.reporterSyntax(Array[Int](), Syntax.WildcardType)
-    override def getAgentClassString = "O"
-    override def report(args: Array[Argument], context: Context): AnyRef = {
-      try {
-        val buffer = appSink.pullBuffer
-        val structure = buffer.getCaps.getStructure(0)
-        val height = structure.getInteger("height")
-        val width = structure.getInteger("width")
-        val intBuf = buffer.getByteBuffer.asIntBuffer
-        val imageData = new Array[Int](intBuf.capacity)
-        intBuf.get(imageData, 0, imageData.length)
-        if (recording) {
-          recorder.pushRGBFrame(buffer)
-        }
-        if (!recording) buffer.dispose()
-        Util.getBufferedImage(imageData, width, height)
-      }
-      catch {
-        case e: Exception =>
-          throw new ExtensionException(e.getMessage)
-      }
-    }
+  val image = Util.Image {
+    appSink.pullBuffer
+  } {
+    buffer =>
+      if (recording) recorder.pushRGBFrame(buffer)
+      else           buffer.dispose()
   }
 
 }
