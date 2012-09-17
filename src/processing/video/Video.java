@@ -23,7 +23,9 @@
 
 package processing.video;
 
-import org.gstreamer.*;
+import org.gstreamer.Gst;
+import org.gstreamer.Plugin;
+import org.gstreamer.Registry;
 
 import java.io.File;
 import java.util.List;
