@@ -9,7 +9,7 @@ object Util {
 
   private val colorModel = new DirectColorModel(32, 0xff0000, 0xff00, 0xff)
 
-  private[gstvideo] def getBufferedImage(data: Array[Int], width: Int, height: Int) : BufferedImage = {
+  def getBufferedImage(data: Array[Int], width: Int, height: Int) : BufferedImage = {
 
     def getRGBSampleModel(width: Int, height: Int) : SampleModel =
       colorModel.createCompatibleWritableRaster(1, 1).getSampleModel.createCompatibleSampleModel(width, height)
@@ -19,6 +19,23 @@ object Util {
 
     new BufferedImage(colorModel, getRaster(getRGBSampleModel(width, height), data), false, null)
 
+  }
+
+  private val fileExtToMuxerNameMap = Map(
+    "3gp" -> "gppmux",
+    "avi" -> "avimux",
+    "flv" -> "flvmux",
+    "mj2" -> "mj2mux",
+    "mkv" -> "matroskamux",
+    "mov" -> "qtmux",
+    "mp4" -> "mp4mux",
+    "mpg" -> "ffmux_mpeg",
+    "ogg" -> "oggmux"
+  )
+
+  def determineMuxer(filename: String) : Option[String] = {
+    val fileExt = filename.toLowerCase.reverse.takeWhile(_ != '.').reverse
+    fileExtToMuxerNameMap.get(fileExt)
   }
 
   class Image(generateBuffer: => Buffer)(cleanup: Buffer => Unit) extends DefaultReporter {

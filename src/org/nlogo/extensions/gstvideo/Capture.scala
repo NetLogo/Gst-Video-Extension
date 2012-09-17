@@ -25,6 +25,22 @@ import org.gstreamer.elements.{ AppSink, RGBDataFileSink }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Capture {
+
+  //@ Option!
+  private var cameraPipeline: Pipeline = null
+  private var scale: Element = null
+  private var balance: Element = null
+  private var fpsCountOverlay: Element = null
+  private var appSink: AppSink = null
+  private var recorder: RGBDataFileSink = null
+  private var recording = false
+  private var framerate: Fraction = null
+  private final val WORST = 0 //@ ENUM!
+  private final val LOW = 1
+  private final val MEDIUM = 2
+  private final val HIGH = 3
+  private final val BEST = 4
+
   def unload() {
     if (cameraPipeline != null) {
       cameraPipeline.setState(State.NULL)
@@ -41,19 +57,6 @@ object Capture {
     fpsCountOverlay = null
   }
 
-  private var cameraPipeline: Pipeline = null
-  private var scale: Element = null
-  private var balance: Element = null
-  private var fpsCountOverlay: Element = null
-  private var appSink: AppSink = null
-  private var recorder: RGBDataFileSink = null
-  private var recording = false
-  private var framerate: Fraction = null
-  private final val WORST = 0 //@ ENUM!
-  private final val LOW = 1
-  private final val MEDIUM = 2
-  private final val HIGH = 3
-  private final val BEST = 4
 
   object StartRecording {
     final val THEORA = 0
@@ -79,38 +82,9 @@ object Capture {
       var propNames: Array[String] = null
       var propValues: Array[AnyRef] = null
       var encoder = ""
-      var muxer = ""
-      val fn = filename.toLowerCase
-      if (fn.endsWith(".ogg")) {
-        muxer = "oggmux"
-      }
-      else if (fn.endsWith(".avi")) {
-        muxer = "avimux"
-      }
-      else if (fn.endsWith(".mov")) {
-        muxer = "qtmux"
-      }
-      else if (fn.endsWith(".flv")) {
-        muxer = "flvmux"
-      }
-      else if (fn.endsWith(".mkv")) {
-        muxer = "matroskamux"
-      }
-      else if (fn.endsWith(".mp4")) {
-        muxer = "mp4mux"
-      }
-      else if (fn.endsWith(".3gp")) {
-        muxer = "gppmux"
-      }
-      else if (fn.endsWith(".mpg")) {
-        muxer = "ffmux_mpeg"
-      }
-      else if (fn.endsWith(".mj2")) {
-        muxer = "mj2mux"
-      }
-      else {
-        throw new ExtensionException("Unrecognized video container")
-      }
+
+      var muxer = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
+
       // Configuring encoder.
       if (codecType == THEORA) {
         encoder = "theoraenc"
@@ -224,14 +198,15 @@ object Capture {
       else {
         throw new ExtensionException("Unrecognized video container")
       }
-      var fps = 30
-      if (framerate != null) fps = framerate.getNumerator / framerate.getDenominator
+
+      val fps = 30
       val file = new File(filename)
       recorder = new RGBDataFileSink("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file)
       recorder.start
       recorder.setPreQueueSize(0)
       recorder.setSrcQueueSize(60)
       recording = true
+
     }
   }
 
