@@ -1,25 +1,8 @@
 package org.nlogo.extensions.gstvideo
 
-import java.awt.image.{ BufferedImage, DataBufferInt, DirectColorModel, Raster, SampleModel, WritableRaster }
+import java.util.ArrayList
 import org.nlogo.api.{ DefaultClassManager, ExtensionManager, PrimitiveManager }
 import processing.video.Video
-
-object GstVideo {
-
-  private[gstvideo] def getBufferedImage(data: Array[Int], width: Int, height: Int) : BufferedImage =
-    new BufferedImage(colorModel, getRaster(getRGBSampleModel(width, height), data), false, null)
-
-  private def getRGBSampleModel(width: Int, height: Int) : SampleModel = {
-    val raster = colorModel.createCompatibleWritableRaster(1, 1)
-    raster.getSampleModel.createCompatibleSampleModel(width, height)
-  }
-
-  private def getRaster(model: SampleModel, data: Array[Int]) : WritableRaster =
-    Raster.createWritableRaster(model, new DataBufferInt(data, data.length, 0), null)
-
-  private final val colorModel = new DirectColorModel(32, 0xff0000, 0xff00, 0xff)
-
-}
 
 class GstVideo extends DefaultClassManager {
 
@@ -90,8 +73,6 @@ class GstVideo extends DefaultClassManager {
 
   }
 
-  override def additionalJars: java.util.List[String] = {
-    new java.util.ArrayList[String]()
-  }
+  override def additionalJars = new ArrayList[String]()
 
 }

@@ -395,7 +395,7 @@ object Movie {
 				// relied on, dispose it now and cache current buffer
         if (lastBuffer != null && buffer != lastBuffer) lastBuffer.dispose()
         lastBuffer = buffer
-        GstVideo.getBufferedImage(imageData, bufferWidth, bufferHeight)
+        Util.getBufferedImage(imageData, bufferWidth, bufferHeight)
       }
       catch {
         case e: Exception =>

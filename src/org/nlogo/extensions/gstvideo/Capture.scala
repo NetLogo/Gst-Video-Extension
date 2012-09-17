@@ -421,7 +421,7 @@ object Capture {
         }
         frameCount += 1
         if (!recording) buffer.dispose()
-        GstVideo.getBufferedImage(imageData, width, height)
+        Util.getBufferedImage(imageData, width, height)
       }
       catch {
         case e: Exception =>
