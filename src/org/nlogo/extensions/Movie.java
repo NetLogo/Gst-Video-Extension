@@ -1,4 +1,4 @@
-package org.nlogo.extensions.yoshi;
+package org.nlogo.extensions.gstvideo;
 
 // Extensions API
 import org.nlogo.api.DefaultClassManager;
@@ -507,7 +507,7 @@ public strictfp class Movie {
 			float width = (float) (args[0].getDoubleValue() * patchSize);
 			float height = (float) (args[1].getDoubleValue() * patchSize);
 			
-			playerFrame = new JFrame("NetLogo: Yoshi Video Extension - External Video Frame");
+			playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame");
 			
 			playerFrameVideoComponent = new VideoComponent();
 			Element videosink = playerFrameVideoComponent.getElement();
@@ -728,7 +728,7 @@ public strictfp class Movie {
 				
 				lastBuffer = buffer;
 								
-				return Yoshi.getBufferedImage(imageData, bufferWidth, bufferHeight);
+				return GstVideo.getBufferedImage(imageData, bufferWidth, bufferHeight);
 				
 			} catch (Exception e) {
 				e.printStackTrace();

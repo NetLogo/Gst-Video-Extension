@@ -19,7 +19,7 @@
  * Boston, MA  02111-1307  USA
  */
 
-package org.nlogo.extensions.yoshi;
+package org.nlogo.extensions.gstvideo;
 
 import org.nlogo.api.DefaultClassManager;
 import org.nlogo.api.PrimitiveManager;
@@ -724,7 +724,7 @@ public strictfp class Capture {
 				if (!recording)
 					buffer.dispose();
 			
-				return Yoshi.getBufferedImage(imageData, width, height);
+				return GstVideo.getBufferedImage(imageData, width, height);
 				
 			} catch (Exception e) {
 				e.printStackTrace();

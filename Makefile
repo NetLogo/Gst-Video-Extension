@@ -34,7 +34,7 @@ else
 
 endif
 
-EXT_NAME=yoshi
+EXT_NAME=gst-video
 JAR_NAME=$(EXT_NAME).jar
 PACK_NAME=$(JAR_NAME).pack.gz
 

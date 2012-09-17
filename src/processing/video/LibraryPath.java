@@ -23,14 +23,9 @@
 
 package processing.video;
 
-import java.net.URL;
-
-import com.sun.jna.Platform;
-
 class LibraryPath {
-  // This method returns the folder inside which the gstreamer library folder
-  // is located.
+  // This method returns the folder inside which the gstreamer library folder is located.
   String get() {
-    return "extensions/yoshi/lib";
+    return "extensions/gst-video/lib";
   }
 }

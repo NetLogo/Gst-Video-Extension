@@ -1,4 +1,4 @@
-package org.nlogo.extensions.yoshi;
+package org.nlogo.extensions.gstvideo;
 
 import org.nlogo.api.DefaultClassManager;
 import org.nlogo.api.PrimitiveManager;
@@ -16,21 +16,20 @@ import java.awt.image.*;
 import org.gstreamer.*;
 import processing.video.Video;
 
-public strictfp class Yoshi extends DefaultClassManager {
+public strictfp class GstVideo extends DefaultClassManager {
 	
 	public void runOnce(org.nlogo.api.ExtensionManager em) throws ExtensionException {
-		// Init GStreamer
+
+		//String args[] = {"--gst-debug-level=2"};
+		String args[] = {""};
 		
-		String args[] = {"--gst-debug-level=2"};
-	//	String args[] = {""};
-		
-		//Gst.init("Yoshi", args);
 		Video.init(args);
-		// first check that we can find the quicktime jar
+		// first check that we can find the quicktime jar //@ LIES!
 		// if we can't it throws an extension exception ev 3/3/09
-		em.getFile("yoshi/gstreamer-java-1.5.jar");
-		em.getFile("yoshi/jna.jar");
 	//	em.addToLibraryPath(this, "lib");
+		em.getFile("gst-video/gstreamer-java-1.5.jar");
+		em.getFile("gst-video/jna.jar");
+
 	}
 
 	public void load(PrimitiveManager primitiveManager) {

@@ -1,47 +1,47 @@
-extensions [yoshi bitmap]
+extensions [gst-video bitmap]
 
 globals [used-drawing-layer]
 
 
 to load-movie
-  yoshi:movie-open file-name world-width world-height 
+  gst-video:movie-open file-name world-width world-height 
   set seek-pos 0
 end
 
 to play-movie
-  yoshi:movie-start
+  gst-video:movie-start
 end
 
 to pause-movie
-  yoshi:movie-stop
+  gst-video:movie-stop
 end
 
 to seek-to-current-pos
-  let new-pos (seek-pos / 100) * yoshi:movie-duration-millisecs
-  yoshi:movie-set-time-millisecs new-pos
+  let new-pos (seek-pos / 100) * gst-video:movie-duration-millisecs
+  gst-video:movie-set-time-millisecs new-pos
 end
 
 to mov-mirror-to-patches
-  if (yoshi:movie-playing?) [
+  if (gst-video:movie-playing?) [
     mov-update-fx
-    bitmap:copy-to-pcolors yoshi:movie-image false
-    if (yoshi:movie-playing?) [update-slider]
+    bitmap:copy-to-pcolors gst-video:movie-image false
+    if (gst-video:movie-playing?) [update-slider]
     display
   ]
 end
 
 to mov-mirror-to-drawing
-  if (yoshi:movie-playing?) [
+  if (gst-video:movie-playing?) [
     mov-update-fx
-    bitmap:copy-to-drawing yoshi:movie-image 0 0
-    if (yoshi:movie-playing?) [update-slider]
+    bitmap:copy-to-drawing gst-video:movie-image 0 0
+    if (gst-video:movie-playing?) [update-slider]
     display
   ]
 end
 
 to update-slider
-  let current-time yoshi:movie-time-millisecs
-  let duration yoshi:movie-duration-millisecs
+  let current-time gst-video:movie-time-millisecs
+  let duration gst-video:movie-duration-millisecs
   
   let completed-percent (current-time / duration)
   set completed-percent completed-percent * 100
@@ -51,15 +51,15 @@ to update-slider
 end
 
 to init-webcam
-  yoshi:camera-select world-width world-height 
+  gst-video:camera-select world-width world-height 
 end
 
 to start-webcam
-  yoshi:camera-start 0 0 
+  gst-video:camera-start 0 0 
 end
 
 to stop-webcam
-  yoshi:camera-stop  
+  gst-video:camera-stop  
 end
 
 to cam-mirror-to-patches
@@ -69,17 +69,17 @@ to cam-mirror-to-patches
    set used-drawing-layer false 
   ]
   
-  if (yoshi:camera-is-rolling?) [
+  if (gst-video:camera-is-rolling?) [
     cam-update-fx
-    bitmap:copy-to-pcolors yoshi:camera-image false
+    bitmap:copy-to-pcolors gst-video:camera-image false
     display
   ]
 end
 
 to cam-mirror-to-drawing
-  if (yoshi:camera-is-rolling?) [
+  if (gst-video:camera-is-rolling?) [
     cam-update-fx
-    bitmap:copy-to-drawing yoshi:camera-image 0 0
+    bitmap:copy-to-drawing gst-video:camera-image 0 0
     display
     set used-drawing-layer true
   ]
@@ -94,20 +94,20 @@ to random-fx
 end
 
 to cam-update-fx
-  yoshi:camera-set-stretches camera-stretch
-  yoshi:camera-set-contrast contrast
-  yoshi:camera-set-brightness brightness
-  yoshi:camera-set-hue hue
-  yoshi:camera-set-saturation saturation
+  gst-video:camera-set-stretches camera-stretch
+  gst-video:camera-set-contrast contrast
+  gst-video:camera-set-brightness brightness
+  gst-video:camera-set-hue hue
+  gst-video:camera-set-saturation saturation
 end
 
 to mov-update-fx
-  yoshi:movie-set-looping looping
-  yoshi:movie-set-stretches camera-stretch
-  yoshi:movie-set-contrast contrast
-  yoshi:movie-set-brightness brightness
-  yoshi:movie-set-hue hue
-  yoshi:movie-set-saturation saturation
+  gst-video:movie-set-looping looping
+  gst-video:movie-set-stretches camera-stretch
+  gst-video:movie-set-contrast contrast
+  gst-video:movie-set-brightness brightness
+  gst-video:movie-set-hue hue
+  gst-video:movie-set-saturation saturation
 end
 
 to reset-fx
@@ -538,7 +538,7 @@ BUTTON
 245
 465
 open-player
-yoshi:movie-open-player world-width world-height \n
+gst-video:movie-open-player world-width world-height \n
 NIL
 1
 T
@@ -555,7 +555,7 @@ BUTTON
 245
 502
 close-player
-yoshi:movie-close
+gst-video:movie-close
 NIL
 1
 T
@@ -583,7 +583,7 @@ BUTTON
 113
 602
 start recording
-yoshi:camera-start-recording rec-filename world-width world-height
+gst-video:camera-start-recording rec-filename world-width world-height
 NIL
 1
 T
@@ -600,7 +600,7 @@ BUTTON
 180
 603
 stop
-yoshi:camera-stop-recording
+gst-video:camera-stop-recording
 NIL
 1
 T
