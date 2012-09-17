@@ -61,14 +61,12 @@ class GstVideo extends DefaultClassManager {
 
     try Movie.unload()
     catch {
-      case e: NoClassDefFoundError =>
-        println("Movie wasn't loaded for some reason")
+      case e: NoClassDefFoundError => println("Movie wasn't loaded for some reason")
     }
 
     try Capture.unload()
     catch {
-      case e: NoClassDefFoundError =>
-        println("Capture wasn't loaded for some reason")
+      case e: NoClassDefFoundError => println("Capture wasn't loaded for some reason")
     }
 
   }

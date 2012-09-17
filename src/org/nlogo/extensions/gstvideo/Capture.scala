@@ -99,34 +99,34 @@ object Capture {
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= 0 && contrast <= 2) balance.set("contrast", contrast)
-      else throw new ExtensionException("Invalid contrast value: [0, 2] (Video is 1)")
+      else                                throw new ExtensionException("Invalid contrast value: [0, 2] (Default is 1)")
     }
   }
 
   class SetBrightness extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      val contrast = args(0).getDoubleValue
-      if (contrast >= -1 && contrast <= 1) balance.set("brightness", contrast)
-      else throw new ExtensionException("Invalid brightness value: [-1, 1] (Video is 0)")
+      val brightness = args(0).getDoubleValue
+      if (brightness >= -1 && brightness <= 1) balance.set("brightness", brightness)
+      else                                     throw new ExtensionException("Invalid brightness value: [-1, 1] (Default is 0)")
     }
   }
 
   class SetHue extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      val contrast = args(0).getDoubleValue
-      if (contrast >= -1 && contrast <= 1) balance.set("hue", contrast)
-      else throw new ExtensionException("Invalid hue value: [-1, 1] (Video is 0)")
+      val hue = args(0).getDoubleValue
+      if (hue >= -1 && hue <= 1) balance.set("hue", hue)
+      else                       throw new ExtensionException("Invalid hue value: [-1, 1] (Default is 0)")
     }
   }
 
   class SetSaturation extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      val contrast = args(0).getDoubleValue
-      if (contrast >= 0 && contrast <= 2) balance.set("saturation", contrast)
-      else throw new ExtensionException("Invalid saturation value: [0, 2] (Video is 1)")
+      val saturation = args(0).getDoubleValue
+      if (saturation >= 0 && saturation <= 2) balance.set("saturation", saturation)
+      else                                    throw new ExtensionException("Invalid saturation value: [0, 2] (Default is 1)")
     }
   }
 
@@ -144,6 +144,7 @@ object Capture {
     }
   }
 
+  //@ Fix up
   class SelectCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
@@ -212,8 +213,7 @@ object Capture {
     override def perform(args: Array[Argument], context: Context) {
       try cameraPipeline.setState(State.NULL)
       catch {
-        case e: Exception =>
-          throw new ExtensionException(e.getMessage)
+        case e: Exception => throw new ExtensionException(e.getMessage)
       }
     }
   }

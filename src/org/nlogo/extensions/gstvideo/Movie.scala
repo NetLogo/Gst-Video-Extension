@@ -173,8 +173,7 @@ object Movie {
       var filename: String = null
       try filename = context.attachCurrentDirectory(args(0).getString)
       catch {
-        case e: IOException =>
-          throw new ExtensionException(e.getMessage)
+        case e: IOException => throw new ExtensionException(e.getMessage)
       }
       if (player == null && filename != null) {
         player = new PlayBin2("player")

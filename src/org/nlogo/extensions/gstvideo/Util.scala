@@ -58,8 +58,7 @@ object Util {
 
       }
       catch {
-        case e: Exception =>
-          throw new ExtensionException(e.getMessage)
+        case e: Exception => throw new ExtensionException(e.getMessage)
       }
     }
   }
