@@ -36,7 +36,7 @@ object Movie {
   private var playerFrameVideoComponent: VideoComponent = null
 
   class SetStrechToFillScreen extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {
       if (scale == null) throw new ExtensionException("no scale element seems to exist")
       val shouldAddBorders = !(args(0).getBooleanValue)
@@ -46,7 +46,7 @@ object Movie {
   }
 
   class SetFrameCacheSize extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (player == null || appSink == null) throw new ExtensionException("there is either no movie open or the pipeline is misconfigured")
       val brightness = args(0).getDoubleValue
@@ -56,7 +56,7 @@ object Movie {
   }
 
   class SetContrast extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
       val contrast = args(0).getDoubleValue
@@ -66,7 +66,7 @@ object Movie {
   }
 
   class SetBrightness extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
       val brightness = args(0).getDoubleValue
@@ -76,7 +76,7 @@ object Movie {
   }
 
   class SetHue extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
       val contrast = args(0).getDoubleValue
@@ -86,7 +86,7 @@ object Movie {
   }
 
   class SetSaturation extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
       val contrast = args(0).getDoubleValue
@@ -96,21 +96,21 @@ object Movie {
   }
 
   class SetLooping extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {
       looping = args(0).getBooleanValue
     }
   }
 
   class DebugCommand extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int]())
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       println("=============== Running debug command(s) ===============")
     }
   }
 
   class OpenMovie extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     private def installCallbacks(bus: Bus) {
       bus.connect(new Bus.INFO {
         def infoMessage(source: GstObject, code: Int, message: String) {
@@ -226,7 +226,7 @@ object Movie {
   }
 
   class StartMovie extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int]())
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
       System.err.println("starting movie (in theory...)")
@@ -235,7 +235,7 @@ object Movie {
   }
 
   class SetTimeSeconds extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
       val newPos = args(0).getDoubleValue
@@ -244,7 +244,7 @@ object Movie {
   }
 
   class SetTimeMilliseconds extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
       val newPos = args(0).getDoubleValue
@@ -253,7 +253,7 @@ object Movie {
   }
 
   class OpenPlayer extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
       val patchSize = context.getAgent.world.patchSize
@@ -276,14 +276,14 @@ object Movie {
   }
 
   class IsPlaying extends VideoReporter {
-    override def getSyntax           = Syntax.reporterSyntax(Syntax.BooleanType)
+    override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
       Boolean.box(player != null && player.isPlaying)
     }
   }
 
   class StopMovie extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int]())
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
       else                player.setState(State.PAUSED)
@@ -291,7 +291,7 @@ object Movie {
   }
 
   class CloseMovie extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int]())
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
       //	player.setState(State.NULL);
@@ -310,7 +310,7 @@ object Movie {
   }
 
   class MovieDurationSeconds extends VideoReporter {
-    override def getSyntax           = Syntax.reporterSyntax(Syntax.NumberType)
+    override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context): AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
       val duration = player.queryDuration(TimeUnit.SECONDS)
@@ -319,7 +319,7 @@ object Movie {
   }
 
   class MovieDurationMilliseconds extends VideoReporter {
-    override def getSyntax           = Syntax.reporterSyntax(Syntax.NumberType)
+    override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context): AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
       val duration = player.queryDuration(TimeUnit.MILLISECONDS)
@@ -328,7 +328,7 @@ object Movie {
   }
 
   class CurrentTimeSeconds extends VideoReporter {
-    override def getSyntax           = Syntax.reporterSyntax(Syntax.NumberType)
+    override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context): AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
       val position = player.queryPosition(TimeUnit.SECONDS)
@@ -337,7 +337,7 @@ object Movie {
   }
 
   class CurrentTimeMilliseconds extends VideoReporter {
-    override def getSyntax           = Syntax.reporterSyntax(Syntax.NumberType)
+    override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context): AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
       val position = player.queryPosition(TimeUnit.MILLISECONDS)

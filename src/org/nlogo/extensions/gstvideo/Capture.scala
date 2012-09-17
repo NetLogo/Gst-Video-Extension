@@ -65,7 +65,7 @@ object Capture {
   }
 
   class StartRecording extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       import StartRecording._
       val patchSize = context.getAgent.world.patchSize
@@ -236,7 +236,7 @@ object Capture {
   }
 
   class StopRecording extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int]())
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       recorder.stop
       recording = false
@@ -244,7 +244,7 @@ object Capture {
   }
 
   class SetStrechToFillScreen extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {
       val shouldAddBorders = !(args(0).getBooleanValue)
       scale.set("add-borders", shouldAddBorders)
@@ -252,7 +252,7 @@ object Capture {
   }
 
   class SetContrast extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= 0 && contrast <= 2) balance.set("contrast", contrast)
@@ -261,7 +261,7 @@ object Capture {
   }
 
   class SetBrightness extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= -1 && contrast <= 1) balance.set("brightness", contrast)
@@ -270,7 +270,7 @@ object Capture {
   }
 
   class SetHue extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= -1 && contrast <= 1) balance.set("hue", contrast)
@@ -279,7 +279,7 @@ object Capture {
   }
 
   class SetSaturation extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
       if (contrast >= 0 && contrast <= 2) balance.set("saturation", contrast)
@@ -288,21 +288,21 @@ object Capture {
   }
 
   class StartCamera extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       cameraPipeline.setState(State.PLAYING)
     }
   }
 
   class IsRolling extends VideoReporter {
-    override def getSyntax           = Syntax.reporterSyntax(Syntax.BooleanType)
+    override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
     override def report(args: Array[Argument], context: Context): AnyRef = {
       Boolean.box(cameraPipeline != null && cameraPipeline.getState == State.PLAYING)
     }
   }
 
   class SelectCamera extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val capturePlugin = "qtkitvideosrc"
       val patchSize = context.getAgent.world.patchSize
@@ -369,7 +369,7 @@ object Capture {
   }
 
   class StopCamera extends VideoCommand {
-    override def getSyntax           = Syntax.commandSyntax(Array[Int]())
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       try cameraPipeline.setState(State.NULL)
       catch {
