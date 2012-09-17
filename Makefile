@@ -2,6 +2,10 @@ ifeq ($(origin JAVA_HOME), undefined)
   JAVA_HOME=/usr
 endif
 
+ifeq ($(origin SCALA_HOME), undefined)
+  SCALA_HOME=../..
+endif
+
 ifeq ($(origin NETLOGO), undefined)
   NETLOGO=../..
 endif
@@ -13,6 +17,7 @@ ifneq (,$(findstring CYGWIN,$(shell uname -s)))
 
   COLON=\;
   JAVA_HOME := `cygpath -up "$(JAVA_HOME)"`
+  SCALA_HOME := `cygpath -up "$(SCALA_HOME)"`
   OS=windows
 
   ifneq (,$(findstring WOW64,$(shell uname -s)))
@@ -53,13 +58,19 @@ LIB_FILE=$(LIB_TYPE).tar
 
 JAR_REPO=http://ccl.northwestern.edu/devel/
 
-SRCS=$(shell find src -type f -name '*.java')
+PROCESSING_SRCS=$(shell find src/processing/video -type f -name '*.java')
+SRCS=$(shell find src/org/nlogo/extensions/gstvideo -type f -name '*.scala')
 
 $(JAR_NAME).jar $(PACK_NAME): $(SRCS) $(GST_JAR) $(GST_PACK) $(JNA_JAR) $(JNA_PACK) $(LIB_DIR)$(LIB_TYPE) manifest.txt
 	mkdir -p classes
-	$(JAVA_HOME)/bin/javac -g -encoding us-ascii -source 1.5 -target 1.5 -classpath $(NETLOGO)/NetLogoLite.jar$(COLON)$(GST_JAR)$(COLON)$(JNA_JAR)$(COLON)gst-video.jar -d classes $(SRCS)
+	$(JAVA_HOME)/bin/javac -g -encoding us-ascii -source 1.5 -target 1.5 -classpath $(GST_JAR)$(COLON)$(JNA_JAR) -d classes $(PROCESSING_SRCS)
+	$(SCALA_HOME)/bin/scalac -deprecation -unchecked -encoding us-ascii -classpath $(NETLOGO)/NetLogoLite.jar$(COLON)$(GST_JAR)$(COLON)$(JNA_JAR)$(COLON)classes -d classes $(SRCS)
 	jar cmf manifest.txt $(JAR_NAME) -C classes .
 	pack200 --modification-time=latest --effort=9 --strip-debug --no-keep-file-order --unknown-attribute=strip $(PACK_NAME) $(JAR_NAME)
+
+clean:
+	rm -rf classes
+	rm *.jar *.jar.pack.gz
 
 $(LIB_DIR)$(LIB_TYPE):
 	mkdir -p lib
