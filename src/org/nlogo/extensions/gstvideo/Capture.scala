@@ -34,11 +34,6 @@ object Capture {
   private var appSink: AppSink = null
   private var recorder: RGBDataFileSink = null
   private var recording = false
-  private final val WORST = 0 //@ ENUM!
-  private final val LOW = 1
-  private final val MEDIUM = 2
-  private final val HIGH = 3
-  private final val BEST = 4
 
   def unload() {
     if (cameraPipeline != null) {
@@ -56,150 +51,24 @@ object Capture {
     fpsCountOverlay = null
   }
 
-
-  object StartRecording {
-    final val THEORA = 0
-    final val XVID = 1
-    final val X264 = 2
-    final val DIRAC = 3
-    final val MJPEG = 4
-    final val MJPEG2K = 5
-  }
-
   class StartRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      import StartRecording._
+
+      val fps       = 30
+      val filename  = args(0).getString
+      val file      = new File(filename)
       val patchSize = context.getAgent.world.patchSize
-      val width = args(1).getDoubleValue * patchSize
-      val height = args(2).getDoubleValue * patchSize
-      println("recording-width: " + width.toInt)
-      println("recording-height: " + height.toInt)
-      val filename = args(0).getString
-      val codecQuality = MEDIUM
-      val codecType = THEORA
-      var propNames: Array[String] = null
-      var propValues: Array[AnyRef] = null
-      var encoder = ""
+      val width     = args(1).getDoubleValue * patchSize
+      val height    = args(2).getDoubleValue * patchSize
+      //@ println("recording-width: " + width.toInt)
+      //  println("recording-height: " + height.toInt)
 
-      var muxer = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
+      import Codec.Theora, Quality.Medium
+      val codec = new Theora(Medium)
+      val (propNames, propValues, encoder) = codec.getProps
+      val muxer     = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
 
-      // Configuring encoder.
-      if (codecType == THEORA) {
-        encoder = "theoraenc"
-        propNames = new Array[String](1)
-        propValues = new Array[AnyRef](1)
-        propNames(0) = "quality"
-        var q = 31
-        if (codecQuality == WORST) {
-          q = 0
-        }
-        else if (codecQuality == LOW) {
-          q = 15
-        }
-        else if (codecQuality == MEDIUM) {
-          q = 31
-        }
-        else if (codecQuality == HIGH) {
-          q = 47
-        }
-        else if (codecQuality == BEST) {
-          q = 63
-        }
-        propValues(0) = Int.box(q)
-      }
-      else if (codecType == DIRAC) {
-        encoder = "schroenc"
-        propNames = new Array[String](1)
-        propValues = new Array[AnyRef](1)
-        propNames(0) = "quality"
-        var q = 5.0d
-        if (codecQuality == WORST) {
-          q = 0.0d
-        }
-        else if (codecQuality == LOW) {
-          q = 2.5d
-        }
-        else if (codecQuality == MEDIUM) {
-          q = 5.0d
-        }
-        else if (codecQuality == HIGH) {
-          q = 7.5d
-        }
-        else if (codecQuality == BEST) {
-          q = 10.0d
-        }
-        propValues(0) = Double.box(q)
-      }
-      else if (codecType == XVID) {
-        encoder = "xvidenc"
-      }
-      // TODO: set Properties of xvidenc.
-      else if (codecType == X264) {
-        encoder = "x264enc"
-        propNames = new Array[String](2)
-        propValues = new Array[AnyRef](2)
-
-        // The pass property can take the following values:
-				// (0): cbr              - Constant Bitrate Encoding (Video)
-				// (4): quant            - Constant Quantizer
-				// (5): qual             - Constant Quality
-				// (17): pass1            - VBR Encoding - Pass 1
-				// (18): pass2            - VBR Encoding - Pass 2
-				// (19): pass3            - VBR Encoding - Pass 3
-        propNames(0) = "pass"
-        propValues(0) = Int.box(5)
-        propNames(1) = "quantizer"
-        var q = 21
-        if (codecQuality == WORST) {
-          q = 50
-        }
-        else if (codecQuality == LOW) {
-          q = 35
-        }
-        else if (codecQuality == MEDIUM) {
-          q = 21
-        }
-        else if (codecQuality == HIGH) {
-          q = 15
-        }
-        else if (codecQuality == BEST) {
-          q = 1
-        }
-        propValues(1) = Int.box(q)
-      }
-      else if (codecType == MJPEG) {
-        encoder = "jpegenc"
-        propNames = new Array[String](1)
-        propValues = new Array[AnyRef](1)
-        propNames(0) = "quality"
-        var q = 85
-        if (codecQuality == WORST) {
-          q = 0
-        }
-        else if (codecQuality == LOW) {
-          q = 30
-        }
-        else if (codecQuality == MEDIUM) {
-          q = 50
-        }
-        else if (codecQuality == HIGH) {
-          q = 85
-        }
-        else if (codecQuality == BEST) {
-          q = 100
-        }
-        propValues(0) = Int.box(q)
-      }
-      else if (codecType == MJPEG2K) {
-        encoder = "jp2kenc"
-      }
-      else {
-        throw new ExtensionException("Unrecognized video container")
-      }
-
-      val fps = 30
-      val file = new File(filename)
       recorder = new RGBDataFileSink("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file)
       recorder.start
       recorder.setPreQueueSize(0)
