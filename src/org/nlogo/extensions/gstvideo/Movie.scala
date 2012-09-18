@@ -35,7 +35,7 @@ object Movie {
   private var playerFrame: JFrame = null
   private var playerFrameVideoComponent: VideoComponent = null
 
-  class SetStrechToFillScreen extends VideoCommand {
+  object SetStrechToFillScreen extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {
       if (scale == null) throw new ExtensionException("no scale element seems to exist")
@@ -45,7 +45,7 @@ object Movie {
     }
   }
 
-  class SetFrameCacheSize extends VideoCommand {
+  object SetFrameCacheSize extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (player == null || appSink == null) throw new ExtensionException("there is either no movie open or the pipeline is misconfigured")
@@ -55,7 +55,7 @@ object Movie {
     }
   }
 
-  class SetContrast extends VideoCommand {
+  object SetContrast extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
@@ -65,7 +65,7 @@ object Movie {
     }
   }
 
-  class SetBrightness extends VideoCommand {
+  object SetBrightness extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
@@ -75,7 +75,7 @@ object Movie {
     }
   }
 
-  class SetHue extends VideoCommand {
+  object SetHue extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
@@ -85,7 +85,7 @@ object Movie {
     }
   }
 
-  class SetSaturation extends VideoCommand {
+  object SetSaturation extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
@@ -95,21 +95,21 @@ object Movie {
     }
   }
 
-  class SetLooping extends VideoCommand {
+  object SetLooping extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {
       looping = args(0).getBooleanValue
     }
   }
 
-  class DebugCommand extends VideoCommand {
+  object DebugCommand extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       println("=============== Running debug command(s) ===============")
     }
   }
 
-  class OpenMovie extends VideoCommand {
+  object OpenMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     private def installCallbacks(bus: Bus) {
       bus.connect(new Bus.INFO {
@@ -224,7 +224,7 @@ object Movie {
     }
   }
 
-  class StartMovie extends VideoCommand {
+  object StartMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -233,7 +233,7 @@ object Movie {
     }
   }
 
-  class SetTimeSeconds extends VideoCommand {
+  object SetTimeSeconds extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -242,7 +242,7 @@ object Movie {
     }
   }
 
-  class SetTimeMilliseconds extends VideoCommand {
+  object SetTimeMilliseconds extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -251,7 +251,7 @@ object Movie {
     }
   }
 
-  class OpenPlayer extends VideoCommand {
+  object OpenPlayer extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -274,14 +274,14 @@ object Movie {
     }
   }
 
-  class IsPlaying extends VideoReporter {
+  object IsPlaying extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
       Boolean.box(player != null && player.isPlaying)
     }
   }
 
-  class StopMovie extends VideoCommand {
+  object StopMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -289,7 +289,7 @@ object Movie {
     }
   }
 
-  class CloseMovie extends VideoCommand {
+  object CloseMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -308,7 +308,7 @@ object Movie {
     }
   }
 
-  class MovieDurationSeconds extends VideoReporter {
+  object MovieDurationSeconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -317,7 +317,7 @@ object Movie {
     }
   }
 
-  class MovieDurationMilliseconds extends VideoReporter {
+  object MovieDurationMilliseconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -326,7 +326,7 @@ object Movie {
     }
   }
 
-  class CurrentTimeSeconds extends VideoReporter {
+  object CurrentTimeSeconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")
@@ -335,7 +335,7 @@ object Movie {
     }
   }
 
-  class CurrentTimeMilliseconds extends VideoReporter {
+  object CurrentTimeMilliseconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
       if (player == null) throw new ExtensionException("there is no movie open")

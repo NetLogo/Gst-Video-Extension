@@ -52,7 +52,7 @@ object Capture {
     fpsCountOverlay = null
   }
 
-  class StartRecording extends VideoCommand {
+  object StartRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
 
@@ -79,7 +79,7 @@ object Capture {
     }
   }
 
-  class StopRecording extends VideoCommand {
+  object StopRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       recorder.stop
@@ -87,7 +87,7 @@ object Capture {
     }
   }
 
-  class SetStrechToFillScreen extends VideoCommand {
+  object SetStrechToFillScreen extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {
       val shouldAddBorders = !(args(0).getBooleanValue)
@@ -95,7 +95,7 @@ object Capture {
     }
   }
 
-  class SetContrast extends VideoCommand {
+  object SetContrast extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val contrast = args(0).getDoubleValue
@@ -104,7 +104,7 @@ object Capture {
     }
   }
 
-  class SetBrightness extends VideoCommand {
+  object SetBrightness extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val brightness = args(0).getDoubleValue
@@ -113,7 +113,7 @@ object Capture {
     }
   }
 
-  class SetHue extends VideoCommand {
+  object SetHue extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val hue = args(0).getDoubleValue
@@ -122,7 +122,7 @@ object Capture {
     }
   }
 
-  class SetSaturation extends VideoCommand {
+  object SetSaturation extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       val saturation = args(0).getDoubleValue
@@ -131,14 +131,14 @@ object Capture {
     }
   }
 
-  class StartCamera extends VideoCommand {
+  object StartCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
       cameraPipeline.setState(State.PLAYING)
     }
   }
 
-  class IsRolling extends VideoReporter {
+  object IsRolling extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
       Boolean.box(cameraPipeline != null && cameraPipeline.getState == State.PLAYING)
@@ -146,7 +146,7 @@ object Capture {
   }
 
   //@ Fix up
-  class SelectCamera extends VideoCommand {
+  object SelectCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
 
@@ -218,7 +218,7 @@ object Capture {
     }
   }
 
-  class StopCamera extends VideoCommand {
+  object StopCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       try cameraPipeline.setState(State.NULL)
