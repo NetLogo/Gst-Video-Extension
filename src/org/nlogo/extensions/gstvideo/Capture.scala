@@ -75,6 +75,21 @@ object Capture extends VideoPrimitiveManager {
 
   }
 
+  object SetStrechToFillScreen extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
+    override def perform(args: Array[Argument], context: Context) {
+      val shouldAddBorders = !(args(0).getBooleanValue)
+      scale.set("add-borders", shouldAddBorders)
+    }
+  }
+
+  object IsRolling extends VideoReporter {
+    override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
+    override def report(args: Array[Argument], context: Context) : AnyRef = {
+      Boolean.box(cameraPipeline.getState == State.PLAYING)
+    }
+  }
+  
   object StartRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
@@ -104,28 +119,6 @@ object Capture extends VideoPrimitiveManager {
     }
   }
 
-  object SetStrechToFillScreen extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
-    override def perform(args: Array[Argument], context: Context) {
-      val shouldAddBorders = !(args(0).getBooleanValue)
-      scale.set("add-borders", shouldAddBorders)
-    }
-  }
-
-  object StartCamera extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      cameraPipeline.setState(State.PLAYING)
-    }
-  }
-
-  object IsRolling extends VideoReporter {
-    override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
-    override def report(args: Array[Argument], context: Context) : AnyRef = {
-      Boolean.box(cameraPipeline.getState == State.PLAYING)
-    }
-  }
-
   object InitCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
@@ -148,13 +141,17 @@ object Capture extends VideoPrimitiveManager {
     }
   }
 
+  object StartCamera extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
+    override def perform(args: Array[Argument], context: Context) {
+      cameraPipeline.setState(State.PLAYING)
+    }
+  }
+
   object StopCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      try cameraPipeline.setState(State.NULL)
-      catch {
-        case e: Exception => throw new ExtensionException(e.getMessage)
-      }
+      cameraPipeline.setState(State.NULL)
     }
   }
 
