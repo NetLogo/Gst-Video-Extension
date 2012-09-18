@@ -27,6 +27,7 @@ import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 object Capture {
 
   //@ Option!
+  //@ How many of these _really_ need to be globals?
   private var cameraPipeline: Pipeline = null
   private var scale: Element = null
   private var balance: Element = null
@@ -148,17 +149,21 @@ object Capture {
   class SelectCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
+
       val capturePlugin = "qtkitvideosrc"
-      val patchSize = context.getAgent.world.patchSize
-      val width = args(0).getDoubleValue * patchSize
-      val height = args(1).getDoubleValue * patchSize
+      val patchSize     = context.getAgent.world.patchSize
+      val width         = args(0).getDoubleValue * patchSize
+      val height        = args(1).getDoubleValue * patchSize
+
       println("======== World Information ========")
       println("width:  " + width)
       println("height: " + height)
       println("===================================")
+
       // Pipeline construction based on Processing
 			// http://code.google.com/p/processing/source/browse/trunk/processing/java/libraries/video/src/processing/video/Capture.java
       cameraPipeline = new Pipeline("camera-capture")
+
       cameraPipeline.getBus.connect(new Bus.TAG {
         def tagsFound(source: GstObject, tagList: TagList) {
           import scala.collection.JavaConversions._
@@ -169,6 +174,7 @@ object Capture {
           }
         }
       })
+
       cameraPipeline.getBus.connect(new Bus.STATE_CHANGED {
         def stateChanged(source: GstObject, old: State, current: State, pending: State) {
 
@@ -179,25 +185,28 @@ object Capture {
 
         }
       })
+
       val webcamSource = ElementFactory.make(capturePlugin, null)
-      val conv = ElementFactory.make("ffmpegcolorspace", null)
-      val videofilter = ElementFactory.make("capsfilter", null)
+      val conv         = ElementFactory.make("ffmpegcolorspace", null)
+      val videofilter  = ElementFactory.make("capsfilter", null)
       videofilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"))
-      scale = ElementFactory.make("videoscale", null)
+
+      scale   = ElementFactory.make("videoscale", null)
       balance = ElementFactory.make("videobalance", null)
       appSink = ElementFactory.make("appsink", null).asInstanceOf[AppSink] //@ Pattern match!
       appSink.set("max-buffers", 1)
       appSink.set("drop", true)
-      val capsString = "video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=24, pixel-aspect-ratio=480/640".format(width.toInt, height.toInt)
-      val filterCaps = Caps.fromString(capsString)
-      appSink.setCaps(filterCaps)
+      appSink.setCaps(Caps.fromString("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=24, pixel-aspect-ratio=480/640".format(width.toInt, height.toInt)))
+
       cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, appSink)
       Element.linkMany(webcamSource, conv, videofilter, scale, balance, appSink)
+
       cameraPipeline.getBus.connect(new Bus.ERROR {
         def errorMessage(source: GstObject, code: Int, message: String) {
           println("Error occurred: " + message)
         }
       })
+
       cameraPipeline.getBus.connect(new Bus.STATE_CHANGED {
         def stateChanged(source: GstObject, old: State, current: State, pending: State) {
           if (source == cameraPipeline) {
@@ -205,6 +214,7 @@ object Capture {
           }
         }
       })
+
     }
   }
 
