@@ -17,7 +17,7 @@ object Movie extends VideoPrimitiveManager {
   private lazy val player      = new PlayBin2("player")
   private lazy val playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame")
   private lazy val frameVideo  = new VideoComponent
-  private lazy val scale       = ElementFactory.make("videoscale", null)
+  private lazy val scale       = ElementFactory.make("videoscale", "scale")
   private lazy val sinkBin     = new Bin
 
   private var lastBufferOpt: Option[Buffer] = None
@@ -48,12 +48,26 @@ object Movie extends VideoPrimitiveManager {
 
   object OpenMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
-    private def installCallbacks(bus: Bus) {
+    //@ Should have a way to turn these on/off
+    private def installCallbacks() { // Watch for errors and log them
+
+      val bus = player.getBus
+
+      val padAddedElem = new Element.PAD_ADDED {
+        def padAdded(e: Element, p: Pad) {
+          println("PAD ADDED: " + p)
+        }
+      }
+
+      sinkBin.connect(padAddedElem)
+      player.connect(padAddedElem)
+
       bus.connect(new Bus.INFO {
         def infoMessage(source: GstObject, code: Int, message: String) {
           println("Code: " + code + " | Message: " + message)
         }
       })
+
       bus.connect(new Bus.TAG {
         //@ Oh, how I love code redundancy
         def tagsFound(source: GstObject, tagList: TagList) {
@@ -64,29 +78,21 @@ object Movie extends VideoPrimitiveManager {
           } { println("[%s]=%s".format(tagName, tagData)) }
         }
       })
+
       bus.connect(new Bus.ERROR {
         def errorMessage(source: GstObject, code: Int, message: String) {
           println("Error occurred: " + message + "(" + code + ")")
         }
       })
+
       bus.connect(new Bus.STATE_CHANGED {
         def stateChanged(source: GstObject, old: State, current: State, pending: State) {
           if (source == player) {
-            println("Pipeline state changed from " + old + " to " + current)
-            if (old == State.READY && current == State.PAUSED) {
-              val sinkPads = sinkBin.getSinkPads
-              val sinkPad = sinkPads.get(0)
-              val sinkCaps = sinkPad.getNegotiatedCaps
-              println(sinkCaps)
-              val structure = sinkCaps.getStructure(0)
-              val width = structure.getInteger("width")
-              val height = structure.getInteger("height")
-              println("video-width: " + width)
-              println("video-height: " + height)
-            }
+            println("Pipeline state changed from %s to %s".format(old, current))
           }
         }
       })
+
       bus.connect(new Bus.EOS {
         def endOfStream(source: GstObject) {
           println("Finished playing file")
@@ -94,9 +100,11 @@ object Movie extends VideoPrimitiveManager {
           else player.setState(State.PAUSED)
         }
       })
+
     }
 
     override def perform(args: Array[Argument], context: Context) {
+
       val patchSize = context.getAgent.world.patchSize
       val width = args(1).getDoubleValue * patchSize
       val height = args(2).getDoubleValue * patchSize
@@ -105,50 +113,33 @@ object Movie extends VideoPrimitiveManager {
         catch {
           case e: IOException => throw new ExtensionException(e.getMessage)
         }
-      if (filename != null) {
-        installCallbacks(player.getBus) // Watch for errors and log them
-        //@ Oh, beautiful.  Two of the exact same listener attached to different elements
-        sinkBin.connect(new Element.PAD_ADDED {
-          def padAdded(e: Element, p: Pad) {
-            println("PAD ADDED: " + p)
-          }
-        })
-        player.connect(new Element.PAD_ADDED {
-          def padAdded(e: Element, p: Pad) {
-            println("PAD ADDED: " + p)
-          }
-        })
-       	// appSink.set("enable-last-buffer", true);
-        val conv = ElementFactory.make("ffmpegcolorspace", null) //@ Redundancy
-        val sizeFilter = ElementFactory.make("capsfilter", null)
-        val capsString = "video/x-raw-rgb, width=%d, height=%d".format(width.toInt, height.toInt)
-        val sizeCaps = Caps.fromString(capsString)
-        sizeFilter.setCaps(sizeCaps)
 
-        val rate = ElementFactory.make("videorate", null)
-        sinkBin.addMany(scale, sizeFilter, balance, conv, rate, appSink)
-        if (!scale.link(sizeFilter)) println("Problem with scale->caps")
-        if (!sizeFilter.link(balance)) println("Problem with sizeFilter->balance")
-        if (!balance.link(conv)) println("Problem with caps->conv")
-        if (!conv.link(rate)) println("Problem with conv->overlay")
-        val pads = scale.getSinkPads
-        val sinkPad = pads.get(0)
-        val ghost = new GhostPad("sink", sinkPad)
-        sinkBin.addPad(ghost)
-        // Snippet from http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
-        val some_caps = new Caps("video/x-raw-rgb" + ", bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255")
-        if (!Element.linkPadsFiltered(rate, "src", appSink, "sink", some_caps)) {
-          throw new ExtensionException("Failed linking ffmpegcolorspace with appsink")
-        }
-        player.setVideoSink(sinkBin)
-      }
-      println("attempting to load file://" + filename)
+      installCallbacks()
+
+      val conv       = ElementFactory.make("ffmpegcolorspace", "conv") //@ Redundancy!
+      val rate       = ElementFactory.make("videorate", "rate")
+      val sizeFilter = ElementFactory.make("capsfilter", "sizeFilter")
+      val capsString = "video/x-raw-rgb, width=%d, height=%d".format(width.toInt, height.toInt)
+      sizeFilter.setCaps(Caps.fromString(capsString))
+
+      sinkBin.addMany(scale, sizeFilter, balance, conv, rate, appSink)
+      Element.linkMany(scale, sizeFilter, balance, conv, rate, appSink)
+
+      sinkBin.addPad(new GhostPad("sink", scale.getSinkPads.get(0)))
+
+      // Snippet from http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
+      val some_caps = new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255")
+
+      if (!Element.linkPadsFiltered(rate, "src", appSink, "sink", some_caps))
+        throw new ExtensionException("Failed linking ffmpegcolorspace with appsink")
+
+      player.setVideoSink(sinkBin)
       player.setState(State.NULL)
       player.set("uri", "file://" + filename)
+
     }
   }
 
-  //@ Reached this point
   object StartMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {

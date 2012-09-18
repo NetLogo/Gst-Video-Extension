@@ -59,7 +59,7 @@ object Capture extends VideoPrimitiveManager {
 
     pipeline.getBus.connect(new Bus.ERROR {
       def errorMessage(source: GstObject, code: Int, message: String) {
-        println("Error occurred: " + message)
+        println("Error occurred: " + message + "(" + code + ")")
       }
     })
 
