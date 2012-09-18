@@ -33,7 +33,7 @@ object Camera extends VideoPrimitiveManager {
 
   override def unload() {
     super.unload()
-    cameraPipeline.setState(State.NULL) //@ Is this really necessary?
+    cameraPipeline.setState(State.NULL) // GStreamer crashes and warns you about this if you don't do it; needed for element cleanup
     cameraPipeline.dispose()
     recorderOpt foreach (_.dispose())
   }
