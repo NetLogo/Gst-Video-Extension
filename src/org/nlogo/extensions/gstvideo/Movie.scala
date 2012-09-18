@@ -13,15 +13,9 @@ import swing.VideoComponent
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Movie extends VideoPrimitiveManager {
-  override def unload() {
-    if (player != null) {
-      player.setState(State.NULL)
-      player = null
-    }
-    sinkBin = null
-  }
 
-  private var player: PlayBin2 = null
+  private lazy val player = new PlayBin2("player")
+
   private var lastBuffer: Buffer = null
   private var looping = false
   private var scale: Element = null
@@ -33,6 +27,11 @@ object Movie extends VideoPrimitiveManager {
   private var appSink: AppSink = null
   private var playerFrame: JFrame = null
   private var playerFrameVideoComponent: VideoComponent = null
+
+  override def unload() {
+    player.setState(State.NULL)
+    sinkBin = null
+  }
 
   //@ Maybe extract this to `VideoPrimitiveManager`, too
   object SetStrechToFillScreen extends VideoCommand {
@@ -119,8 +118,7 @@ object Movie extends VideoPrimitiveManager {
       catch {
         case e: IOException => throw new ExtensionException(e.getMessage)
       }
-      if (player == null && filename != null) {
-        player = new PlayBin2("player")
+      if (filename != null) {
         installCallbacks(player.getBus) // Watch for errors and log them
         sinkBin = new Bin
         sinkBin.connect(new Element.PAD_ADDED {
@@ -170,7 +168,6 @@ object Movie extends VideoPrimitiveManager {
   object StartMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      if (player == null) throw new ExtensionException("there is no movie open")
       System.err.println("starting movie (in theory...)")
       player.setState(State.PLAYING)
     }
@@ -179,7 +176,6 @@ object Movie extends VideoPrimitiveManager {
   object SetTimeSeconds extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      if (player == null) throw new ExtensionException("there is no movie open")
       val newPos = args(0).getDoubleValue
       player.seek(ClockTime.fromSeconds(newPos.longValue))
     }
@@ -188,7 +184,6 @@ object Movie extends VideoPrimitiveManager {
   object SetTimeMilliseconds extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      if (player == null) throw new ExtensionException("there is no movie open")
       val newPos = args(0).getDoubleValue
       player.seek(ClockTime.fromMillis(newPos.longValue))
     }
@@ -197,7 +192,6 @@ object Movie extends VideoPrimitiveManager {
   object OpenPlayer extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      if (player == null) throw new ExtensionException("there is no movie open")
       val patchSize = context.getAgent.world.patchSize
       val width  = args(0).getDoubleValue * patchSize
       val height = args(1).getDoubleValue * patchSize
@@ -220,22 +214,20 @@ object Movie extends VideoPrimitiveManager {
   object IsPlaying extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
-      Boolean.box(player != null && player.isPlaying)
+      Boolean.box(player.isPlaying)
     }
   }
 
   object StopMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      if (player == null) throw new ExtensionException("there is no movie open")
-      else                player.setState(State.PAUSED)
+      player.setState(State.PAUSED)
     }
   }
 
   object CloseMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      if (player == null) throw new ExtensionException("there is no movie open")
       //	player.setState(State.NULL);
 		  //	player = null;
       if (playerFrame != null) {
@@ -254,7 +246,6 @@ object Movie extends VideoPrimitiveManager {
   object MovieDurationSeconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
-      if (player == null) throw new ExtensionException("there is no movie open")
       val duration = player.queryDuration(TimeUnit.SECONDS)
       Double.box(duration)
     }
@@ -263,7 +254,6 @@ object Movie extends VideoPrimitiveManager {
   object MovieDurationMilliseconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
-      if (player == null) throw new ExtensionException("there is no movie open")
       val duration = player.queryDuration(TimeUnit.MILLISECONDS)
       Double.box(duration)
     }
@@ -272,7 +262,6 @@ object Movie extends VideoPrimitiveManager {
   object CurrentTimeSeconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
-      if (player == null) throw new ExtensionException("there is no movie open")
       val position = player.queryPosition(TimeUnit.SECONDS)
       Double.box(position)
     }
@@ -281,7 +270,6 @@ object Movie extends VideoPrimitiveManager {
   object CurrentTimeMilliseconds extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
-      if (player == null) throw new ExtensionException("there is no movie open")
       val position = player.queryPosition(TimeUnit.MILLISECONDS)
       Double.box(position)
     }
@@ -289,7 +277,7 @@ object Movie extends VideoPrimitiveManager {
 
   val image = Util.Image {
 
-    if (player == null || appSink == null)
+    if (appSink == null)
       throw new ExtensionException("either no movie is open or pipeline is not constructed properly")
 
     Option(appSink.pullBuffer) getOrElse lastBuffer
