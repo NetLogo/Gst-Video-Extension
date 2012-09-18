@@ -28,9 +28,9 @@ object Capture extends VideoPrimitiveManager {
   private lazy val cameraPipeline = initPipeline()
   private lazy val scale          = ElementFactory.make("videoscale", "scale")
 
-  private var recorder: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
+  private var recorderOpt: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
 
-  val image = Util.Image{ appSink.pullBuffer }{ buffer => recorder foreach (_.push(buffer)) }
+  val image = Util.Image{ appSink.pullBuffer }{ buffer => recorderOpt foreach (_.push(buffer)) }
 
   override def unload() {
     super.unload()
@@ -38,7 +38,7 @@ object Capture extends VideoPrimitiveManager {
     cameraPipeline.setState(State.NULL)
     cameraPipeline.dispose()
     scale.dispose()
-    recorder foreach (_.dispose())
+    recorderOpt foreach (_.dispose())
   }
 
   private def initPipeline() : Pipeline = {
@@ -91,8 +91,8 @@ object Capture extends VideoPrimitiveManager {
       val height    = args(2).getDoubleValue * patchSize
       val muxer     = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
 
-      recorder = Option(new Recorder("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file))
-      recorder foreach (_.start())
+      recorderOpt = Option(new Recorder("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file))
+      recorderOpt foreach (_.start())
 
     }
   }
@@ -100,7 +100,7 @@ object Capture extends VideoPrimitiveManager {
   object StopRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      recorder foreach (_.stop())
+      recorderOpt foreach (_.stop())
     }
   }
 
