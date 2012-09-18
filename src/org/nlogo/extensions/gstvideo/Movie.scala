@@ -255,12 +255,12 @@ object Movie extends VideoPrimitiveManager {
   }
 
   val image = Util.Image {
-    Option(appSink.pullBuffer) getOrElse lastBufferOpt
+    Option(appSink.pullBuffer) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
   } {
     buffer =>
       // If a buffer was cached and is not currently being relied on, dispose it now and cache current buffer
-      if (!lastBufferOpt.isEmpty && buffer != lastBufferOpt) lastBufferOpt.dispose()
-      else                                                   lastBufferOpt = buffer
+      if (!lastBufferOpt.isEmpty && buffer != lastBufferOpt) lastBufferOpt foreach (_.dispose())
+      else                                                   lastBufferOpt = Option(buffer)
   }
 
 }
