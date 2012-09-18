@@ -21,12 +21,10 @@ package org.nlogo.extensions.gstvideo
 
 import java.io.File
 import org.gstreamer.{ Bus, Caps, Element, ElementFactory, GstObject, Pipeline, State, TagList }
-import org.gstreamer.elements.AppSink
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Capture extends VideoPrimitiveManager {
 
-  private lazy val appSink        = initSink()
   private lazy val cameraPipeline = initPipeline()
   private lazy val scale          = ElementFactory.make("videoscale", "scale")
 
@@ -75,16 +73,6 @@ object Capture extends VideoPrimitiveManager {
 
     pipeline
 
-  }
-
-  private def initSink() : AppSink = {
-    val sink = ElementFactory.make("appsink", "sink") match {
-      case appSink: AppSink => appSink
-      case other            => throw new ExtensionException("Invalid sink type created: class == " + other.getClass.getName)
-    }
-    sink.set("max-buffers", 1)
-    sink.set("drop", true)
-    sink
   }
 
   object StartRecording extends VideoCommand {
