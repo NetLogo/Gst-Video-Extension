@@ -55,6 +55,7 @@ object Movie {
     }
   }
 
+  //@ UGHHHHHHHHHH!  WHY DID HE DUPLICATE THE CODE FOR THESE FILTERS?!?!??!?!
   object SetContrast extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
