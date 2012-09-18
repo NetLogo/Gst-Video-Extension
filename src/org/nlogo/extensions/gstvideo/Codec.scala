@@ -48,7 +48,7 @@ object Codec {
   class X264(override protected val quality: Quality) extends Codec {
     override def getProps : (Array[String], Array[AnyRef], String) = {
       // The pass property can take the following values:
-      // (0): cbr              - Constant Bitrate Encoding (Video)
+      // (0): cbr              - Constant Bitrate Encoding (default)
       // (4): quant            - Constant Quantizer
       // (5): qual             - Constant Quality
       // (17): pass1            - VBR Encoding - Pass 1
