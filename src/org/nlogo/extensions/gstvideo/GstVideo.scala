@@ -7,18 +7,8 @@ import processing.video.Video
 class GstVideo extends DefaultClassManager {
 
   override def runOnce(em: ExtensionManager) {
-
-   	// val args = Array("--gst-debug-level=2")
-    val args = Array("")
-    Video.init(args)
-
-    //@ LIES!
-    // first check that we can find the quicktime jar
-		// if we can't it throws an extension exception ev 3/3/09
-	  //	em.addToLibraryPath(this, "lib");
-    em.getFile("gst-video/gstreamer-java-1.5.jar")
-    em.getFile("gst-video/jna.jar")
-
+   	// Video.init(Array("--gst-debug-level=2"))
+    Video.init(Array(""))
   }
 
   override def load(primitiveManager: PrimitiveManager) {
