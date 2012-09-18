@@ -45,7 +45,7 @@ object Camera extends VideoPrimitiveManager {
     val pipeline = new Pipeline("camera-capture")
 
     pipeline.getBus.connect(new Bus.TAG {
-      def tagsFound(source: GstObject, tagList: TagList) {
+      override def tagsFound(source: GstObject, tagList: TagList) {
         import scala.collection.JavaConversions._
         for {
           tagName <- tagList.getTagNames
@@ -55,13 +55,13 @@ object Camera extends VideoPrimitiveManager {
     })
 
     pipeline.getBus.connect(new Bus.ERROR {
-      def errorMessage(source: GstObject, code: Int, message: String) {
+      override def errorMessage(source: GstObject, code: Int, message: String) {
         println("Error occurred: " + message + "(" + code + ")")
       }
     })
 
     pipeline.getBus.connect(new Bus.STATE_CHANGED {
-      def stateChanged(source: GstObject, old: State, current: State, pending: State) {
+      override def stateChanged(source: GstObject, old: State, current: State, pending: State) {
         if (source == pipeline) {
           println("Pipeline state changed from %s to %s".format(old, current))
         }

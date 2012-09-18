@@ -37,7 +37,7 @@ object Movie extends VideoPrimitiveManager {
     val playbin = new PlayBin2("player")
 
     playbin.getBus.connect(new Bus.EOS {
-      def endOfStream(source: GstObject) {
+      override def endOfStream(source: GstObject) {
         if (isLooping) playbin.seek(ClockTime.fromSeconds(0))
         else           playbin.setState(State.PAUSED)
       }
@@ -78,14 +78,14 @@ object Movie extends VideoPrimitiveManager {
       player.connect(padAddedElem)
 
       bus.connect(new Bus.INFO {
-        def infoMessage(source: GstObject, code: Int, message: String) {
+        override def infoMessage(source: GstObject, code: Int, message: String) {
           println("Code: " + code + " | Message: " + message)
         }
       })
 
       bus.connect(new Bus.TAG {
         //@ Oh, how I love code redundancy
-        def tagsFound(source: GstObject, tagList: TagList) {
+        override def tagsFound(source: GstObject, tagList: TagList) {
           import scala.collection.JavaConversions._
           for {
             tagName <- tagList.getTagNames
@@ -95,13 +95,13 @@ object Movie extends VideoPrimitiveManager {
       })
 
       bus.connect(new Bus.ERROR {
-        def errorMessage(source: GstObject, code: Int, message: String) {
+        override def errorMessage(source: GstObject, code: Int, message: String) {
           println("Error occurred: " + message + "(" + code + ")")
         }
       })
 
       bus.connect(new Bus.STATE_CHANGED {
-        def stateChanged(source: GstObject, old: State, current: State, pending: State) {
+        override def stateChanged(source: GstObject, old: State, current: State, pending: State) {
           if (source == player) {
             println("Pipeline state changed from %s to %s".format(old, current))
           }
