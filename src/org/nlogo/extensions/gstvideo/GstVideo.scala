@@ -22,19 +22,19 @@ class GstVideo extends DefaultClassManager {
   }
 
   override def load(primitiveManager: PrimitiveManager) {
-    primitiveManager.addPrimitive("camera-image",               Capture.image)
-    primitiveManager.addPrimitive("camera-start",               Capture.StartCamera)
-    primitiveManager.addPrimitive("camera-stop",                Capture.StopCamera)
-    primitiveManager.addPrimitive("camera-is-rolling?",         Capture.IsRolling)
-    primitiveManager.addPrimitive("camera-init",                Capture.InitCamera)
-    primitiveManager.addPrimitive("camera-start-fullscreen",    Capture.StartFullscreen)
-    primitiveManager.addPrimitive("camera-stop-fullscreen",     Capture.StopFullscreen)
-    primitiveManager.addPrimitive("camera-set-contrast",        Capture.SetContrast)
-    primitiveManager.addPrimitive("camera-set-brightness",      Capture.SetBrightness)
-    primitiveManager.addPrimitive("camera-set-hue",             Capture.SetHue)
-    primitiveManager.addPrimitive("camera-set-saturation",      Capture.SetSaturation)
-    primitiveManager.addPrimitive("camera-start-recording",     Capture.StartRecording)
-    primitiveManager.addPrimitive("camera-stop-recording",      Capture.StopRecording)
+    primitiveManager.addPrimitive("camera-image",               Camera.image)
+    primitiveManager.addPrimitive("camera-start",               Camera.StartCamera)
+    primitiveManager.addPrimitive("camera-stop",                Camera.StopCamera)
+    primitiveManager.addPrimitive("camera-is-rolling?",         Camera.IsRolling)
+    primitiveManager.addPrimitive("camera-init",                Camera.InitCamera)
+    primitiveManager.addPrimitive("camera-start-fullscreen",    Camera.StartFullscreen)
+    primitiveManager.addPrimitive("camera-stop-fullscreen",     Camera.StopFullscreen)
+    primitiveManager.addPrimitive("camera-set-contrast",        Camera.SetContrast)
+    primitiveManager.addPrimitive("camera-set-brightness",      Camera.SetBrightness)
+    primitiveManager.addPrimitive("camera-set-hue",             Camera.SetHue)
+    primitiveManager.addPrimitive("camera-set-saturation",      Camera.SetSaturation)
+    primitiveManager.addPrimitive("camera-start-recording",     Camera.StartRecording)
+    primitiveManager.addPrimitive("camera-stop-recording",      Camera.StopRecording)
     primitiveManager.addPrimitive("movie-image",                Movie.image)
     primitiveManager.addPrimitive("movie-open",                 Movie.OpenMovie)
     primitiveManager.addPrimitive("movie-start",                Movie.StartMovie)
@@ -65,9 +65,9 @@ class GstVideo extends DefaultClassManager {
       case e: NoClassDefFoundError => println("Movie wasn't loaded for some reason")
     }
 
-    try Capture.unload()
+    try Camera.unload()
     catch {
-      case e: NoClassDefFoundError => println("Capture wasn't loaded for some reason")
+      case e: NoClassDefFoundError => println("Camera wasn't loaded for some reason")
     }
 
   }

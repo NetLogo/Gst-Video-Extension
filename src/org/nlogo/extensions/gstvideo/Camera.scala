@@ -23,8 +23,7 @@ import java.io.File
 import org.gstreamer.{ Bus, Caps, Element, ElementFactory, GstObject, Pipeline, State, TagList }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
-//@ Rename to "Camera"
-object Capture extends VideoPrimitiveManager {
+object Camera extends VideoPrimitiveManager {
 
   private lazy val cameraPipeline = initPipeline()
 
