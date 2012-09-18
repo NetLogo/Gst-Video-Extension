@@ -223,35 +223,23 @@ object Movie extends VideoPrimitiveManager {
   }
 
   object MovieDurationSeconds extends VideoReporter {
-    override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context) : AnyRef = {
-      val duration = player.queryDuration(TimeUnit.SECONDS)
-      Double.box(duration)
-    }
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
+    override def report(args: Array[Argument], context: Context) = Double.box(player.queryDuration(TimeUnit.SECONDS))
   }
 
   object MovieDurationMilliseconds extends VideoReporter {
-    override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context) : AnyRef = {
-      val duration = player.queryDuration(TimeUnit.MILLISECONDS)
-      Double.box(duration)
-    }
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
+    override def report(args: Array[Argument], context: Context) = Double.box(player.queryDuration(TimeUnit.MILLISECONDS))
   }
 
   object CurrentTimeSeconds extends VideoReporter {
-    override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context) : AnyRef = {
-      val position = player.queryPosition(TimeUnit.SECONDS)
-      Double.box(position)
-    }
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
+    override def report(args: Array[Argument], context: Context) = Double.box(player.queryPosition(TimeUnit.SECONDS))
   }
 
   object CurrentTimeMilliseconds extends VideoReporter {
-    override def getSyntax = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context) : AnyRef = {
-      val position = player.queryPosition(TimeUnit.MILLISECONDS)
-      Double.box(position)
-    }
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
+    override def report(args: Array[Argument], context: Context) = Double.box(player.queryPosition(TimeUnit.MILLISECONDS))
   }
 
   val image = Util.Image {
