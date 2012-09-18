@@ -14,7 +14,7 @@ import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Movie extends VideoPrimitiveManager {
 
-  private lazy val player      = new PlayBin2("player")
+  private lazy val player      = initPlayer()
   private lazy val playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame")
   private lazy val frameVideo  = new VideoComponent
   private lazy val sinkBin     = new Bin
@@ -30,6 +30,21 @@ object Movie extends VideoPrimitiveManager {
   override protected def setFullscreen(isStretching: Boolean) {
     super.setFullscreen(isStretching)
     frameVideo.setKeepAspect(!isStretching)
+  }
+
+  private def initPlayer() : PlayBin2 = {
+
+    val playbin = new PlayBin2("player")
+
+    playbin.getBus.connect(new Bus.EOS {
+      def endOfStream(source: GstObject) {
+        if (isLooping) playbin.seek(ClockTime.fromSeconds(0))
+        else           playbin.setState(State.PAUSED)
+      }
+    })
+
+    playbin
+
   }
 
   object StartLooping extends VideoCommand {
@@ -90,14 +105,6 @@ object Movie extends VideoPrimitiveManager {
           if (source == player) {
             println("Pipeline state changed from %s to %s".format(old, current))
           }
-        }
-      })
-
-      bus.connect(new Bus.EOS {
-        def endOfStream(source: GstObject) {
-          println("Finished playing file")
-          if (isLooping) player.seek(ClockTime.fromSeconds(0))
-          else player.setState(State.PAUSED)
         }
       })
 
