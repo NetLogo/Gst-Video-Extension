@@ -102,7 +102,7 @@ to cam-update-fx
 end
 
 to mov-update-fx
-  gst-video:movie-set-looping looping
+  if-else (looping) [ gst-video:movie-start-looping ] [ gst-video:movie-stop-looping ]
   gst-video:movie-set-stretches camera-stretch
   gst-video:movie-set-contrast contrast
   gst-video:movie-set-brightness brightness

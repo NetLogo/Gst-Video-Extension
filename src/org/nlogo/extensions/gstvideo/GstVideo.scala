@@ -52,7 +52,8 @@ class GstVideo extends DefaultClassManager {
     primitiveManager.addPrimitive("movie-set-brightness",       Movie.SetBrightness)
     primitiveManager.addPrimitive("movie-set-hue",              Movie.SetHue)
     primitiveManager.addPrimitive("movie-set-saturation",       Movie.SetSaturation)
-    primitiveManager.addPrimitive("movie-set-looping",          Movie.SetLooping)
+    primitiveManager.addPrimitive("movie-start-looping",        Movie.StartLooping)
+    primitiveManager.addPrimitive("movie-stop-looping",         Movie.StopLooping)
   }
 
   override def unload(em: ExtensionManager) {

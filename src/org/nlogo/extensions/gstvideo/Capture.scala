@@ -89,7 +89,7 @@ object Capture extends VideoPrimitiveManager {
       Boolean.box(cameraPipeline.getState == State.PLAYING)
     }
   }
-  
+
   object StartRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {

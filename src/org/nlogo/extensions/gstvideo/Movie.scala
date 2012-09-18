@@ -21,7 +21,7 @@ object Movie extends VideoPrimitiveManager {
   private lazy val sinkBin     = new Bin
 
   private var lastBufferOpt: Option[Buffer] = None
-  private var looping                       = false //@ Surely, there's some way to encapsulate this away somewhere
+  private var isLooping                     = false //@ Surely, there's some way to encapsulate this away somewhere
 
   override def unload() {
     player.setState(State.NULL)
@@ -38,11 +38,17 @@ object Movie extends VideoPrimitiveManager {
     }
   }
 
-  //@ Better yet: `StartLooping` and `StopLooping`
-  object SetLooping extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
+  object StartLooping extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      looping = args(0).getBooleanValue
+      isLooping = true
+    }
+  }
+
+  object StopLooping extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
+    override def perform(args: Array[Argument], context: Context) {
+      isLooping = false
     }
   }
 
@@ -96,7 +102,7 @@ object Movie extends VideoPrimitiveManager {
       bus.connect(new Bus.EOS {
         def endOfStream(source: GstObject) {
           println("Finished playing file")
-          if (looping) player.seek(ClockTime.fromSeconds(0))
+          if (isLooping) player.seek(ClockTime.fromSeconds(0))
           else player.setState(State.PAUSED)
         }
       })
