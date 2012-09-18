@@ -20,12 +20,13 @@
 package org.nlogo.extensions.gstvideo
 
 import java.io.File
-import org.gstreamer.{ Bus, Caps, Element, ElementFactory, GstObject, Pipeline, State, TagList }
+import org.gstreamer.{ Caps, Element, ElementFactory, Pipeline, State }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Camera extends VideoPrimitiveManager {
 
   private lazy val cameraPipeline = initPipeline()
+  override protected lazy val mainBusOwner = cameraPipeline
 
   private var recorderOpt: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
 
@@ -39,37 +40,9 @@ object Camera extends VideoPrimitiveManager {
   }
 
   private def initPipeline() : Pipeline = {
-
-    // Pipeline construction based on Processing
-    // http://code.google.com/p/processing/source/browse/trunk/processing/java/libraries/video/src/processing/video/Capture.java
     val pipeline = new Pipeline("camera-capture")
-
-    pipeline.getBus.connect(new Bus.TAG {
-      override def tagsFound(source: GstObject, tagList: TagList) {
-        import scala.collection.JavaConversions._
-        for {
-          tagName <- tagList.getTagNames
-          tagData <- tagList.getValues(tagName)
-        } { println("[%s]=%s".format(tagName, tagData)) }
-      }
-    })
-
-    pipeline.getBus.connect(new Bus.ERROR {
-      override def errorMessage(source: GstObject, code: Int, message: String) {
-        println("Error occurred: " + message + "(" + code + ")")
-      }
-    })
-
-    pipeline.getBus.connect(new Bus.STATE_CHANGED {
-      override def stateChanged(source: GstObject, old: State, current: State, pending: State) {
-        if (source == pipeline) {
-          println("Pipeline state changed from %s to %s".format(old, current))
-        }
-      }
-    })
-
+    super.initBusListeners()
     pipeline
-
   }
 
   object IsRolling extends VideoReporter {

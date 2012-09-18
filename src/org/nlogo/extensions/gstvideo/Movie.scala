@@ -5,10 +5,8 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.swing.JFrame
 
-import org.gstreamer.{ Bin, Buffer, Bus, Caps, ClockTime, Element, elements, ElementFactory, GhostPad }
-import org.gstreamer.{ GstObject, Pad, State, swing, TagList }
-import elements.PlayBin2
-import swing.VideoComponent
+import org.gstreamer.{ Bin, Buffer, Bus, Caps, ClockTime, Element, elements, ElementFactory, GhostPad }, elements.PlayBin2
+import org.gstreamer.{ GstObject, Pad, State, swing }, swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
@@ -21,6 +19,20 @@ object Movie extends VideoPrimitiveManager {
 
   private var lastBufferOpt: Option[Buffer] = None
   private var isLooping                     = false //@ Surely, there's some way to encapsulate this away somewhere
+
+  override protected lazy val mainBusOwner = player
+  override protected val initExtraBusListeners = () => {
+
+    val padAddedElem = new Element.PAD_ADDED {
+      def padAdded(e: Element, p: Pad) {
+        println("PAD ADDED: " + p)
+      }
+    }
+
+    sinkBin.connect(padAddedElem)
+    player.connect(padAddedElem)
+
+  }
 
   override def unload() {
     player.setState(State.NULL)
@@ -36,12 +48,15 @@ object Movie extends VideoPrimitiveManager {
 
     val playbin = new PlayBin2("player")
 
+    // It actually kind of makes sense to have this bus listener here
     playbin.getBus.connect(new Bus.EOS {
       override def endOfStream(source: GstObject) {
         if (isLooping) playbin.seek(ClockTime.fromSeconds(0))
         else           playbin.setState(State.PAUSED)
       }
     })
+
+    initBusListeners()
 
     playbin
 
@@ -63,65 +78,16 @@ object Movie extends VideoPrimitiveManager {
 
   object OpenMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
-    //@ Should have a way to turn these on/off
-    private def installCallbacks() { // Watch for errors and log them
-
-      val bus = player.getBus
-
-      val padAddedElem = new Element.PAD_ADDED {
-        def padAdded(e: Element, p: Pad) {
-          println("PAD ADDED: " + p)
-        }
-      }
-
-      sinkBin.connect(padAddedElem)
-      player.connect(padAddedElem)
-
-      bus.connect(new Bus.INFO {
-        override def infoMessage(source: GstObject, code: Int, message: String) {
-          println("Code: " + code + " | Message: " + message)
-        }
-      })
-
-      bus.connect(new Bus.TAG {
-        //@ Oh, how I love code redundancy
-        override def tagsFound(source: GstObject, tagList: TagList) {
-          import scala.collection.JavaConversions._
-          for {
-            tagName <- tagList.getTagNames
-            tagData <- tagList.getValues(tagName)
-          } { println("[%s]=%s".format(tagName, tagData)) }
-        }
-      })
-
-      bus.connect(new Bus.ERROR {
-        override def errorMessage(source: GstObject, code: Int, message: String) {
-          println("Error occurred: " + message + "(" + code + ")")
-        }
-      })
-
-      bus.connect(new Bus.STATE_CHANGED {
-        override def stateChanged(source: GstObject, old: State, current: State, pending: State) {
-          if (source == player) {
-            println("Pipeline state changed from %s to %s".format(old, current))
-          }
-        }
-      })
-
-    }
-
     override def perform(args: Array[Argument], context: Context) {
 
       val patchSize = context.getAgent.world.patchSize
-      val width = args(1).getDoubleValue * patchSize
-      val height = args(2).getDoubleValue * patchSize
-      val filename =
+      val width     = args(1).getDoubleValue * patchSize
+      val height    = args(2).getDoubleValue * patchSize
+      val filename  =
         try context.attachCurrentDirectory(args(0).getString)
         catch {
           case e: IOException => throw new ExtensionException(e.getMessage)
         }
-
-      installCallbacks()
 
       val colorConverter = generateColorspaceConverter
       val sizeFilter     = generateVideoFilter

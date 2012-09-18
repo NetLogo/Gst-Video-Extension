@@ -1,6 +1,6 @@
 package org.nlogo.extensions.gstvideo
 
-import org.gstreamer.{ Element, ElementFactory, elements }, elements.AppSink
+import org.gstreamer.{ Bus, Element, ElementFactory, elements, GstObject, State, TagList }, elements.AppSink
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax}
 
 /**
@@ -16,10 +16,56 @@ trait VideoPrimitiveManager {
   protected lazy val balance = ElementFactory.make("videobalance", "balance")
   protected lazy val scale   = ElementFactory.make("videoscale",   "scale")
 
+  private val isDebugging = false
+
   def unload() {
     appSink.dispose()
     balance.dispose()
     scale.dispose()
+  }
+
+  protected def mainBusOwner: Element            // Marks the `Element` onto which the bus listeners will be placed
+  protected def initExtraBusListeners = () => () // Override this is you have extra listeners you want initialized
+  protected def initBusListeners() {             // You should probably never override this --JAB (9/18/12)
+
+    if (isDebugging) {
+
+      val bus = mainBusOwner.getBus
+
+      bus.connect(new Bus.INFO {
+        override def infoMessage(source: GstObject, code: Int, message: String) {
+          println("Code: " + code + " | Message: " + message)
+        }
+      })
+
+      bus.connect(new Bus.TAG {
+        override def tagsFound(source: GstObject, tagList: TagList) {
+          import scala.collection.JavaConversions._
+          for {
+            tagName <- tagList.getTagNames
+            tagData <- tagList.getValues(tagName)
+          } { println("[%s]=%s".format(tagName, tagData)) }
+        }
+      })
+
+      bus.connect(new Bus.ERROR {
+        override def errorMessage(source: GstObject, code: Int, message: String) {
+          println("Error occurred: " + message + "(" + code + ")")
+        }
+      })
+
+      mainBusOwner.getBus.connect(new Bus.STATE_CHANGED {
+        override def stateChanged(source: GstObject, old: State, current: State, pending: State) {
+          if (source == mainBusOwner) {
+            println("Pipeline state changed from %s to %s".format(old, current))
+          }
+        }
+      })
+
+      initExtraBusListeners()
+
+    }
+
   }
 
   protected def initSink() : AppSink = {
