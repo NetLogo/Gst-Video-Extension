@@ -119,13 +119,13 @@ object Movie {
         }
       })
       bus.connect(new Bus.TAG {
+        //@ Oh, how I love code redundancy
         def tagsFound(source: GstObject, tagList: TagList) {
           import scala.collection.JavaConversions._
-          for (tagName <- tagList.getTagNames) {
-            for (tagData <- tagList.getValues(tagName)) {
-              printf("[%s]=%s\n", tagName, tagData)
-            }
-          }
+          for {
+            tagName <- tagList.getTagNames
+            tagData <- tagList.getValues(tagName)
+          } { println("[%s]=%s".format(tagName, tagData)) }
         }
       })
       bus.connect(new Bus.ERROR {
