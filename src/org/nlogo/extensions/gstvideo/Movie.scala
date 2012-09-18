@@ -103,13 +103,6 @@ object Movie {
     }
   }
 
-  object DebugCommand extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int]())
-    override def perform(args: Array[Argument], context: Context) {
-      println("=============== Running debug command(s) ===============")
-    }
-  }
-
   object OpenMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     private def installCallbacks(bus: Bus) {
