@@ -7,40 +7,34 @@ import javax.swing.JFrame
 
 import org.gstreamer.{ Bin, Buffer, Bus, Caps, ClockTime, Element, elements, ElementFactory, GhostPad }
 import org.gstreamer.{ GstObject, Pad, State, swing, TagList }
-import elements.{ AppSink, PlayBin2 }
+import elements.PlayBin2
 import swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Movie extends VideoPrimitiveManager {
 
-  private lazy val player = new PlayBin2("player")
+  private lazy val player      = new PlayBin2("player")
+  private lazy val playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame")
+  private lazy val frameVideo  = new VideoComponent
+  private lazy val scale       = ElementFactory.make("videoscale", null)
+  private lazy val sinkBin     = new Bin
 
-  private var lastBuffer: Buffer = null
-  private var looping = false
-  private var scale: Element = null
-  private var sizeFilter: Element = null
-  private var conv: Element = null
-  private var worldWidth = 0
-  private var worldHeight = 0
-  private var sinkBin: Bin = null
-  private var appSink: AppSink = null
-  private var playerFrame: JFrame = null
-  private var playerFrameVideoComponent: VideoComponent = null
+  private var lastBufferOpt: Option[Buffer] = None
+  private var looping                       = false //@ Surely, there's some way to encapsulate this away somewhere
 
   override def unload() {
     player.setState(State.NULL)
-    sinkBin = null
+    sinkBin.dispose()
   }
 
   //@ Maybe extract this to `VideoPrimitiveManager`, too
   object SetStrechToFillScreen extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {
-      if (scale == null) throw new ExtensionException("no scale element seems to exist")
       val shouldAddBorders = !(args(0).getBooleanValue)
       scale.set("add-borders", shouldAddBorders)
-      if (playerFrameVideoComponent != null) playerFrameVideoComponent.setKeepAspect(shouldAddBorders)
+      frameVideo.setKeepAspect(shouldAddBorders)
     }
   }
 
@@ -106,21 +100,14 @@ object Movie extends VideoPrimitiveManager {
       val patchSize = context.getAgent.world.patchSize
       val width = args(1).getDoubleValue * patchSize
       val height = args(2).getDoubleValue * patchSize
-      println("======== World Information ========")
-      println("patch-size : " + patchSize)
-      println("width      : " + width)
-      println("height     : " + height)
-      println("===================================")
-      worldWidth = width.toInt
-      worldHeight = height.toInt
-      var filename: String = null
-      try filename = context.attachCurrentDirectory(args(0).getString)
-      catch {
-        case e: IOException => throw new ExtensionException(e.getMessage)
-      }
+      val filename =
+        try context.attachCurrentDirectory(args(0).getString)
+        catch {
+          case e: IOException => throw new ExtensionException(e.getMessage)
+        }
       if (filename != null) {
         installCallbacks(player.getBus) // Watch for errors and log them
-        sinkBin = new Bin
+        //@ Oh, beautiful.  Two of the exact same listener attached to different elements
         sinkBin.connect(new Element.PAD_ADDED {
           def padAdded(e: Element, p: Pad) {
             println("PAD ADDED: " + p)
@@ -131,13 +118,9 @@ object Movie extends VideoPrimitiveManager {
             println("PAD ADDED: " + p)
           }
         })
-        appSink = ElementFactory.make("appsink", null).asInstanceOf[AppSink] //@ Pattern match
-        appSink.set("max-buffers", 1)
-        appSink.set("drop", true)
        	// appSink.set("enable-last-buffer", true);
-        conv = ElementFactory.make("ffmpegcolorspace", null)
-        scale = ElementFactory.make("videoscale", null)
-        sizeFilter = ElementFactory.make("capsfilter", null)
+        val conv = ElementFactory.make("ffmpegcolorspace", null) //@ Redundancy
+        val sizeFilter = ElementFactory.make("capsfilter", null)
         val capsString = "video/x-raw-rgb, width=%d, height=%d".format(width.toInt, height.toInt)
         val sizeCaps = Caps.fromString(capsString)
         sizeFilter.setCaps(sizeCaps)
@@ -195,17 +178,16 @@ object Movie extends VideoPrimitiveManager {
       val patchSize = context.getAgent.world.patchSize
       val width  = args(0).getDoubleValue * patchSize
       val height = args(1).getDoubleValue * patchSize
-      playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame")
-      playerFrameVideoComponent = new VideoComponent
-      val videosink = playerFrameVideoComponent.getElement
+      playerFrame.setVisible(true)
+      val videosink = frameVideo.getElement
       val currentState = player.getState
      	// It seems to switch video sinks the pipeline needs to
 			// be reconfigured.  Set to NULL and rebuild.
       player.setState(State.NULL)
       player.setVideoSink(videosink)
       player.setState(currentState)
-      playerFrame.add(playerFrameVideoComponent, BorderLayout.CENTER)
-      playerFrameVideoComponent.setPreferredSize(new Dimension(width.toInt, height.toInt))
+      playerFrame.add(frameVideo, BorderLayout.CENTER)
+      frameVideo.setPreferredSize(new Dimension(width.toInt, height.toInt))
       playerFrame.pack()
       playerFrame.setVisible(true)
     }
@@ -230,10 +212,7 @@ object Movie extends VideoPrimitiveManager {
     override def perform(args: Array[Argument], context: Context) {
       //	player.setState(State.NULL);
 		  //	player = null;
-      if (playerFrame != null) {
-        playerFrame.dispose()
-        playerFrame = null
-      }
+      playerFrame.setVisible(false)
       // It seems to switch video sinks the pipeline needs to
 			// be reconfigured.  Set to NULL and rebuild.
       val currentState = player.getState
@@ -276,17 +255,12 @@ object Movie extends VideoPrimitiveManager {
   }
 
   val image = Util.Image {
-
-    if (appSink == null)
-      throw new ExtensionException("either no movie is open or pipeline is not constructed properly")
-
-    Option(appSink.pullBuffer) getOrElse lastBuffer
-
+    Option(appSink.pullBuffer) getOrElse lastBufferOpt
   } {
     buffer =>
       // If a buffer was cached and is not currently being relied on, dispose it now and cache current buffer
-      if (lastBuffer != null && buffer != lastBuffer) lastBuffer.dispose()
-      else                                            lastBuffer = buffer
+      if (!lastBufferOpt.isEmpty && buffer != lastBufferOpt) lastBufferOpt.dispose()
+      else                                                   lastBufferOpt = buffer
   }
 
 }
