@@ -51,7 +51,7 @@ to update-slider
 end
 
 to init-webcam
-  gst-video:camera-select world-width world-height 
+  gst-video:camera-init world-width world-height
 end
 
 to start-webcam

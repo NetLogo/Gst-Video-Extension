@@ -175,7 +175,7 @@ object Capture {
     }
   }
 
-  object SelectCamera extends VideoCommand {
+  object InitCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
 

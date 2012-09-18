@@ -26,7 +26,7 @@ class GstVideo extends DefaultClassManager {
     primitiveManager.addPrimitive("camera-start",               Capture.StartCamera)
     primitiveManager.addPrimitive("camera-stop",                Capture.StopCamera)
     primitiveManager.addPrimitive("camera-is-rolling?",         Capture.IsRolling)
-    primitiveManager.addPrimitive("camera-select",              Capture.SelectCamera)
+    primitiveManager.addPrimitive("camera-init",                Capture.InitCamera)
     primitiveManager.addPrimitive("camera-set-stretches",       Capture.SetStrechToFillScreen)
     primitiveManager.addPrimitive("camera-set-contrast",        Capture.SetContrast)
     primitiveManager.addPrimitive("camera-set-brightness",      Capture.SetBrightness)
