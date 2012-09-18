@@ -34,7 +34,7 @@ object Capture extends VideoPrimitiveManager {
 
   val image = Util.Image{ appSink.pullBuffer }{ buffer => recorder foreach (_.push(buffer)) }
 
-  def unload() {
+  override def unload() {
     super.unload()
     appSink.dispose()
     cameraPipeline.setState(State.NULL)

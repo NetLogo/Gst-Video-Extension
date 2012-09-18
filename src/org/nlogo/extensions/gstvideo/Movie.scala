@@ -13,7 +13,7 @@ import swing.VideoComponent
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Movie extends VideoPrimitiveManager {
-  def unload() {
+  override def unload() {
     if (player != null) {
       player.setState(State.NULL)
       player = null
@@ -25,7 +25,6 @@ object Movie extends VideoPrimitiveManager {
   private var lastBuffer: Buffer = null
   private var looping = false
   private var scale: Element = null
-  private var balance: Element = null
   private var sizeFilter: Element = null
   private var conv: Element = null
   private var worldWidth = 0
@@ -145,7 +144,6 @@ object Movie extends VideoPrimitiveManager {
         val sizeCaps = Caps.fromString(capsString)
         sizeFilter.setCaps(sizeCaps)
 
-        balance = ElementFactory.make("videobalance", null)
         val rate = ElementFactory.make("videorate", null)
         sinkBin.addMany(scale, sizeFilter, balance, conv, rate, appSink)
         if (!scale.link(sizeFilter)) println("Problem with scale->caps")
