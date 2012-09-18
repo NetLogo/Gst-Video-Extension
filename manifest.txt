@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
 Extension-Name: gst-video
-Class-Manager: org.nlogo.extensions.gstvideo.GstVideo
+Class-Manager: org.nlogo.extensions.gstvideo.GstVideoExtension
 NetLogo-Extension-API-Version: 5.0

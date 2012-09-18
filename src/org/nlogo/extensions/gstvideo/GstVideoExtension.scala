@@ -4,7 +4,7 @@ import java.util.ArrayList
 import org.nlogo.api.{ DefaultClassManager, ExtensionManager, PrimitiveManager }
 import processing.video.Video
 
-class GstVideo extends DefaultClassManager {
+class GstVideoExtension extends DefaultClassManager {
 
   override def runOnce(em: ExtensionManager) {
    	// Video.init(Array("--gst-debug-level=2"))
