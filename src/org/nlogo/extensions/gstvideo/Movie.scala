@@ -17,7 +17,6 @@ object Movie extends VideoPrimitiveManager {
   private lazy val player      = new PlayBin2("player")
   private lazy val playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame")
   private lazy val frameVideo  = new VideoComponent
-  private lazy val scale       = ElementFactory.make("videoscale", "scale")
   private lazy val sinkBin     = new Bin
 
   private var lastBufferOpt: Option[Buffer] = None
@@ -28,14 +27,9 @@ object Movie extends VideoPrimitiveManager {
     sinkBin.dispose()
   }
 
-  //@ Maybe extract this to `VideoPrimitiveManager`, too
-  object SetStrechToFillScreen extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
-    override def perform(args: Array[Argument], context: Context) {
-      val shouldAddBorders = !(args(0).getBooleanValue)
-      scale.set("add-borders", shouldAddBorders)
-      frameVideo.setKeepAspect(shouldAddBorders)
-    }
+  override protected def setFullscreen(isStretching: Boolean) {
+    super.setFullscreen(isStretching)
+    frameVideo.setKeepAspect(!isStretching)
   }
 
   object StartLooping extends VideoCommand {

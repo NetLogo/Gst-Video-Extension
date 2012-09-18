@@ -94,7 +94,7 @@ to random-fx
 end
 
 to cam-update-fx
-  gst-video:camera-set-stretches camera-stretch
+  if-else (is-fullscreen?) [ gst-video:camera-start-fullscreen ] [ gst-video:camera-stop-fullscreen ]
   gst-video:camera-set-contrast contrast
   gst-video:camera-set-brightness brightness
   gst-video:camera-set-hue hue
@@ -102,8 +102,8 @@ to cam-update-fx
 end
 
 to mov-update-fx
-  if-else (looping) [ gst-video:movie-start-looping ] [ gst-video:movie-stop-looping ]
-  gst-video:movie-set-stretches camera-stretch
+  if-else (is-looping?) [ gst-video:movie-start-looping ] [ gst-video:movie-stop-looping ]
+  if-else (is-fullscreen?) [ gst-video:movie-start-fullscreen ] [ gst-video:movie-stop-fullscreen ]
   gst-video:movie-set-contrast contrast
   gst-video:movie-set-brightness brightness
   gst-video:movie-set-hue hue
@@ -362,9 +362,9 @@ SWITCH
 325
 1140
 358
-camera-stretch
-camera-stretch
-1
+is-fullscreen?
+is-fullscreen?
+0
 1
 -1000
 
@@ -569,10 +569,10 @@ NIL
 SWITCH
 12
 511
-116
+139
 544
-looping
-looping
+is-looping?
+is-looping?
 1
 1
 -1000
@@ -960,7 +960,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.0.1
+NetLogo 5.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

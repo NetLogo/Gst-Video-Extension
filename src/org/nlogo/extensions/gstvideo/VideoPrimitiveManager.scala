@@ -12,11 +12,14 @@ import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax}
 
 trait VideoPrimitiveManager {
 
-  protected lazy val balance = ElementFactory.make("videobalance", "balance")
   protected lazy val appSink = initSink()
+  protected lazy val balance = ElementFactory.make("videobalance", "balance")
+  protected lazy val scale   = ElementFactory.make("videoscale", "scale")
 
   def unload() {
+    appSink.dispose()
     balance.dispose()
+    scale.dispose()
   }
 
   protected def initSink() : AppSink = {
@@ -29,6 +32,23 @@ trait VideoPrimitiveManager {
     sink
   }
 
+  object StartFullscreen extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
+    override def perform(args: Array[Argument], context: Context) {
+      setFullscreen(true)
+    }
+  }
+
+  object StopFullscreen extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
+    override def perform(args: Array[Argument], context: Context) {
+      setFullscreen(false)
+    }
+  }
+
+  protected def setFullscreen(isStretching: Boolean) {
+    scale.set("add-borders", !isStretching)
+  }
 
   object SetContrast extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))

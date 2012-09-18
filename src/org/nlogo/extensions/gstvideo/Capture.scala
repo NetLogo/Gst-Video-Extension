@@ -23,10 +23,10 @@ import java.io.File
 import org.gstreamer.{ Bus, Caps, Element, ElementFactory, GstObject, Pipeline, State, TagList }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
+//@ Rename to "Camera"
 object Capture extends VideoPrimitiveManager {
 
   private lazy val cameraPipeline = initPipeline()
-  private lazy val scale          = ElementFactory.make("videoscale", "scale")
 
   private var recorderOpt: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
 
@@ -34,10 +34,8 @@ object Capture extends VideoPrimitiveManager {
 
   override def unload() {
     super.unload()
-    appSink.dispose()
-    cameraPipeline.setState(State.NULL)
+    cameraPipeline.setState(State.NULL) //@ Is this really necessary?
     cameraPipeline.dispose()
-    scale.dispose()
     recorderOpt foreach (_.dispose())
   }
 
@@ -73,14 +71,6 @@ object Capture extends VideoPrimitiveManager {
 
     pipeline
 
-  }
-
-  object SetStrechToFillScreen extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
-    override def perform(args: Array[Argument], context: Context) {
-      val shouldAddBorders = !(args(0).getBooleanValue)
-      scale.set("add-borders", shouldAddBorders)
-    }
   }
 
   object IsRolling extends VideoReporter {
