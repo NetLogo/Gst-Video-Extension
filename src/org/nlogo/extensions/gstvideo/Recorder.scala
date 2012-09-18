@@ -10,7 +10,7 @@ import org.gstreamer.{ Buffer, elements }, elements.RGBDataFileSink
  * Time: 12:44 PM
  */
 
-// A wrapper around a sink //@
+// A wrapper around a sink
 class Recorder(name: String, width: Int, height: Int, fps: Int, encoderStr: String,
                encoderPropNames: Array[String], encoderPropData: Array[AnyRef],
                muxerStr: String, file: File) {
