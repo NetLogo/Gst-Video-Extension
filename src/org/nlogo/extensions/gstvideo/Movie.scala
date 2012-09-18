@@ -148,55 +148,11 @@ object Movie extends VideoPrimitiveManager {
     }
   }
 
+  //@ Reached this point
   object StartMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      System.err.println("starting movie (in theory...)")
       player.setState(State.PLAYING)
-    }
-  }
-
-  object SetTimeSeconds extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      val newPos = args(0).getDoubleValue
-      player.seek(ClockTime.fromSeconds(newPos.longValue))
-    }
-  }
-
-  object SetTimeMilliseconds extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      val newPos = args(0).getDoubleValue
-      player.seek(ClockTime.fromMillis(newPos.longValue))
-    }
-  }
-
-  object OpenPlayer extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      val patchSize = context.getAgent.world.patchSize
-      val width  = args(0).getDoubleValue * patchSize
-      val height = args(1).getDoubleValue * patchSize
-      playerFrame.setVisible(true)
-      val videosink = frameVideo.getElement
-      val currentState = player.getState
-     	// It seems to switch video sinks the pipeline needs to
-			// be reconfigured.  Set to NULL and rebuild.
-      player.setState(State.NULL)
-      player.setVideoSink(videosink)
-      player.setState(currentState)
-      playerFrame.add(frameVideo, BorderLayout.CENTER)
-      frameVideo.setPreferredSize(new Dimension(width.toInt, height.toInt))
-      playerFrame.pack()
-      playerFrame.setVisible(true)
-    }
-  }
-
-  object IsPlaying extends VideoReporter {
-    override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
-    override def report(args: Array[Argument], context: Context) : AnyRef = {
-      Boolean.box(player.isPlaying)
     }
   }
 
@@ -210,16 +166,14 @@ object Movie extends VideoPrimitiveManager {
   object CloseMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      //	player.setState(State.NULL);
-		  //	player = null;
       playerFrame.setVisible(false)
-      // It seems to switch video sinks the pipeline needs to
-			// be reconfigured.  Set to NULL and rebuild.
-      val currentState = player.getState
-      player.setState(State.NULL)
-      player.setVideoSink(sinkBin)
-      player.setState(currentState)
+      setPlayerSink(sinkBin)
     }
+  }
+
+  object IsPlaying extends VideoReporter {
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.BooleanType)
+    override def report(args: Array[Argument], context: Context) = Boolean.box(player.isPlaying)
   }
 
   object MovieDurationSeconds extends VideoReporter {
@@ -240,6 +194,47 @@ object Movie extends VideoPrimitiveManager {
   object CurrentTimeMilliseconds extends VideoReporter {
     override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
     override def report(args: Array[Argument], context: Context) = Double.box(player.queryPosition(TimeUnit.MILLISECONDS))
+  }
+
+  object SetTimeSeconds extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def perform(args: Array[Argument], context: Context) {
+      player.seek(ClockTime.fromSeconds(args(0).getDoubleValue.longValue))
+    }
+  }
+
+  object SetTimeMilliseconds extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def perform(args: Array[Argument], context: Context) {
+      player.seek(ClockTime.fromMillis(args(0).getDoubleValue.longValue))
+    }
+  }
+
+  object OpenPlayer extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
+    override def perform(args: Array[Argument], context: Context) {
+
+      val patchSize    = context.getAgent.world.patchSize
+      val width        = args(0).getDoubleValue * patchSize
+      val height       = args(1).getDoubleValue * patchSize
+      val videoSink    = frameVideo.getElement
+
+      setPlayerSink(videoSink)
+      frameVideo.setPreferredSize(new Dimension(width.toInt, height.toInt))
+      playerFrame.add(frameVideo, BorderLayout.CENTER)
+      playerFrame.pack()
+      playerFrame.setVisible(true)
+
+    }
+  }
+
+  // It seems to switch video sinks the pipeline needs to be reconfigured.  Set to NULL and rebuild.
+  //@ Weird hack; must investigate
+  private def setPlayerSink(sink: Element) {
+    val currentState = player.getState
+    player.setState(State.NULL)
+    player.setVideoSink(sink)
+    player.setState(currentState)
   }
 
   val image = Util.Image {
