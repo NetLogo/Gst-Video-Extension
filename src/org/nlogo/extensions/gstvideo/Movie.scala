@@ -123,14 +123,14 @@ object Movie extends VideoPrimitiveManager {
 
       installCallbacks()
 
-      val conv       = ElementFactory.make("ffmpegcolorspace", "conv") //@ Redundancy!
-      val rate       = ElementFactory.make("videorate", "rate")
-      val sizeFilter = ElementFactory.make("capsfilter", "sizeFilter")
-      val capsString = "video/x-raw-rgb, width=%d, height=%d".format(width.toInt, height.toInt)
+      val colorConverter = generateColorspaceConverter
+      val sizeFilter     = generateVideoFilter
+      val rate           = ElementFactory.make("videorate", "rate")
+      val capsString     = "video/x-raw-rgb, width=%d, height=%d".format(width.toInt, height.toInt)
       sizeFilter.setCaps(Caps.fromString(capsString))
 
-      sinkBin.addMany(scale, sizeFilter, balance, conv, rate, appSink)
-      Element.linkMany(scale, sizeFilter, balance, conv, rate, appSink)
+      sinkBin.addMany(scale, sizeFilter, balance, colorConverter, rate, appSink)
+      Element.linkMany(scale, sizeFilter, balance, colorConverter, rate, appSink)
 
       sinkBin.addPad(new GhostPad("sink", scale.getSinkPads.get(0)))
 

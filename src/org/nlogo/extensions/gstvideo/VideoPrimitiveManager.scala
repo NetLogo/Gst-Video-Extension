@@ -1,6 +1,6 @@
 package org.nlogo.extensions.gstvideo
 
-import org.gstreamer.{ ElementFactory, elements }, elements.AppSink
+import org.gstreamer.{ Element, ElementFactory, elements }, elements.AppSink
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax}
 
 /**
@@ -14,7 +14,7 @@ trait VideoPrimitiveManager {
 
   protected lazy val appSink = initSink()
   protected lazy val balance = ElementFactory.make("videobalance", "balance")
-  protected lazy val scale   = ElementFactory.make("videoscale", "scale")
+  protected lazy val scale   = ElementFactory.make("videoscale",   "scale")
 
   def unload() {
     appSink.dispose()
@@ -31,6 +31,9 @@ trait VideoPrimitiveManager {
     sink.set("drop", true)
     sink
   }
+
+  def generateColorspaceConverter : Element = ElementFactory.make("ffmpegcolorspace", "colorspace-converter")
+  def generateVideoFilter         : Element = ElementFactory.make("capsfilter",       "video-filter")
 
   object StartFullscreen extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())

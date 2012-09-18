@@ -112,20 +112,19 @@ object Camera extends VideoPrimitiveManager {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
 
-      val capturePlugin = "qtkitvideosrc"
       val patchSize     = context.getAgent.world.patchSize
       val width         = args(0).getDoubleValue * patchSize
       val height        = args(1).getDoubleValue * patchSize
 
-      val webcamSource = ElementFactory.make(capturePlugin,      "capture")
-      val conv         = ElementFactory.make("ffmpegcolorspace", "conv")
-      val videofilter  = ElementFactory.make("capsfilter",       "filter")
+      val webcamSource   = ElementFactory.make("qtkitvideosrc", "capture")
+      val colorConverter = generateColorspaceConverter
+      val videoFilter    = generateVideoFilter
 
-      videofilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"))
+      videoFilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"))
       appSink.setCaps(Caps.fromString("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=24, pixel-aspect-ratio=480/640".format(width.toInt, height.toInt)))
 
-      cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, appSink)
-      Element.linkMany(webcamSource, conv, videofilter, scale, balance, appSink)
+      cameraPipeline.addMany(webcamSource, colorConverter, videoFilter, scale, balance, appSink)
+      Element.linkMany(webcamSource, colorConverter, videoFilter, scale, balance, appSink)
 
     }
   }
