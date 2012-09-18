@@ -21,40 +21,80 @@ package org.nlogo.extensions.gstvideo
 
 import java.io.File
 import org.gstreamer.{ Bus, Caps, Element, ElementFactory, GstObject, Pipeline, State, TagList }
-import org.gstreamer.elements.{ AppSink, RGBDataFileSink }
+import org.gstreamer.elements.AppSink
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 object Capture {
 
-  //@ Option!
-  //@ How many of these _really_ need to be globals?
-  private var cameraPipeline: Pipeline = null
-  private var scale: Element = null
-  private var balance: Element = null
-  private var fpsCountOverlay: Element = null
-  private var appSink: AppSink = null
-  private var recorder: RGBDataFileSink = null
-  private var recording = false
+  private lazy val appSink        = initSink()
+  private lazy val cameraPipeline = initPipeline()
+  private lazy val balance        = ElementFactory.make("videobalance", "balance")
+  private lazy val scale          = ElementFactory.make("videoscale", "scale")
+
+  private var recorder: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
+
+  val image = Util.Image{ appSink.pullBuffer }{ buffer => recorder foreach (_.push(buffer)) }
 
   def unload() {
-    if (cameraPipeline != null) {
-      cameraPipeline.setState(State.NULL)
-      cameraPipeline.dispose()
-      cameraPipeline = null
-    }
-    if (scale != null) scale.dispose()
-    if (balance != null) balance.dispose()
-    scale = ({
-      balance = null; balance
+    appSink.dispose()
+    cameraPipeline.setState(State.NULL)
+    cameraPipeline.dispose()
+    balance.dispose()
+    scale.dispose()
+    recorder foreach (_.dispose())
+  }
+
+  private def initPipeline() : Pipeline = {
+
+    // Pipeline construction based on Processing
+    // http://code.google.com/p/processing/source/browse/trunk/processing/java/libraries/video/src/processing/video/Capture.java
+    val pipeline = new Pipeline("camera-capture")
+
+    pipeline.getBus.connect(new Bus.TAG {
+      def tagsFound(source: GstObject, tagList: TagList) {
+        import scala.collection.JavaConversions._
+        for {
+          tagName <- tagList.getTagNames
+          tagData <- tagList.getValues(tagName)
+        } { println("[%s]=%s".format(tagName, tagData)) }
+      }
     })
-    if (appSink != null) appSink.dispose()
-    appSink = null
-    fpsCountOverlay = null
+
+    pipeline.getBus.connect(new Bus.ERROR {
+      def errorMessage(source: GstObject, code: Int, message: String) {
+        println("Error occurred: " + message)
+      }
+    })
+
+    pipeline.getBus.connect(new Bus.STATE_CHANGED {
+      def stateChanged(source: GstObject, old: State, current: State, pending: State) {
+        if (source == pipeline) {
+          println("Pipeline state changed from %s to %s".format(old, current))
+        }
+      }
+    })
+
+    pipeline
+
+  }
+
+  private def initSink() : AppSink = {
+    val sink = ElementFactory.make("appsink", "sink") match {
+      case appSink: AppSink => appSink
+      case other            => throw new ExtensionException("Invalid sink type created: class == " + other.getClass.getName)
+    }
+    sink.set("max-buffers", 1)
+    sink.set("drop", true)
+    sink
   }
 
   object StartRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
+
+      import Codec.Theora, Quality.Medium
+      val codec = new Theora(Medium)
+      val (propNames, propValues, encoder) = codec.getProps
 
       val fps       = 30
       val filename  = args(0).getString
@@ -62,19 +102,10 @@ object Capture {
       val patchSize = context.getAgent.world.patchSize
       val width     = args(1).getDoubleValue * patchSize
       val height    = args(2).getDoubleValue * patchSize
-      //@ println("recording-width: " + width.toInt)
-      //  println("recording-height: " + height.toInt)
-
-      import Codec.Theora, Quality.Medium
-      val codec = new Theora(Medium)
-      val (propNames, propValues, encoder) = codec.getProps
       val muxer     = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
 
-      recorder = new RGBDataFileSink("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file)
-      recorder.start
-      recorder.setPreQueueSize(0)
-      recorder.setSrcQueueSize(60)
-      recording = true
+      recorder = Option(new Recorder("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file))
+      recorder foreach (_.start())
 
     }
   }
@@ -82,8 +113,7 @@ object Capture {
   object StopRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      recorder.stop
-      recording = false
+      recorder foreach (_.stop())
     }
   }
 
@@ -141,11 +171,10 @@ object Capture {
   object IsRolling extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
-      Boolean.box(cameraPipeline != null && cameraPipeline.getState == State.PLAYING)
+      Boolean.box(cameraPipeline.getState == State.PLAYING)
     }
   }
 
-  //@ Fix up
   object SelectCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
@@ -155,65 +184,15 @@ object Capture {
       val width         = args(0).getDoubleValue * patchSize
       val height        = args(1).getDoubleValue * patchSize
 
-      println("======== World Information ========")
-      println("width:  " + width)
-      println("height: " + height)
-      println("===================================")
+      val webcamSource = ElementFactory.make(capturePlugin,      "capture")
+      val conv         = ElementFactory.make("ffmpegcolorspace", "conv")
+      val videofilter  = ElementFactory.make("capsfilter",       "filter")
 
-      // Pipeline construction based on Processing
-			// http://code.google.com/p/processing/source/browse/trunk/processing/java/libraries/video/src/processing/video/Capture.java
-      cameraPipeline = new Pipeline("camera-capture")
-
-      cameraPipeline.getBus.connect(new Bus.TAG {
-        def tagsFound(source: GstObject, tagList: TagList) {
-          import scala.collection.JavaConversions._
-          for (tagName <- tagList.getTagNames) {
-            for (tagData <- tagList.getValues(tagName)) {
-              printf("[%s]=%s\n", tagName, tagData)
-            }
-          }
-        }
-      })
-
-      cameraPipeline.getBus.connect(new Bus.STATE_CHANGED {
-        def stateChanged(source: GstObject, old: State, current: State, pending: State) {
-
-          println("Pipeline state changed from " + old + " to " + current)
-
-          if (old == State.READY && current == State.PAUSED)
-            println(appSink.getSinkPads.get(0).getNegotiatedCaps)
-
-        }
-      })
-
-      val webcamSource = ElementFactory.make(capturePlugin, null)
-      val conv         = ElementFactory.make("ffmpegcolorspace", null)
-      val videofilter  = ElementFactory.make("capsfilter", null)
       videofilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"))
-
-      scale   = ElementFactory.make("videoscale", null)
-      balance = ElementFactory.make("videobalance", null)
-      appSink = ElementFactory.make("appsink", null).asInstanceOf[AppSink] //@ Pattern match!
-      appSink.set("max-buffers", 1)
-      appSink.set("drop", true)
       appSink.setCaps(Caps.fromString("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=24, pixel-aspect-ratio=480/640".format(width.toInt, height.toInt)))
 
       cameraPipeline.addMany(webcamSource, conv, videofilter, scale, balance, appSink)
       Element.linkMany(webcamSource, conv, videofilter, scale, balance, appSink)
-
-      cameraPipeline.getBus.connect(new Bus.ERROR {
-        def errorMessage(source: GstObject, code: Int, message: String) {
-          println("Error occurred: " + message)
-        }
-      })
-
-      cameraPipeline.getBus.connect(new Bus.STATE_CHANGED {
-        def stateChanged(source: GstObject, old: State, current: State, pending: State) {
-          if (source == cameraPipeline) {
-            println("Pipeline state changed from " + old + " to " + current)
-          }
-        }
-      })
 
     }
   }
@@ -226,14 +205,6 @@ object Capture {
         case e: Exception => throw new ExtensionException(e.getMessage)
       }
     }
-  }
-
-  val image = Util.Image {
-    appSink.pullBuffer
-  } {
-    buffer =>
-      if (recording) recorder.pushRGBFrame(buffer)
-      else           buffer.dispose()
   }
 
 }
