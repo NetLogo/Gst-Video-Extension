@@ -35,7 +35,7 @@ trait VideoPrimitiveManager {
   object SetHue extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      validateAndSet("hue", args(0).getDoubleValue, -1, -1)
+      validateAndSet("hue", args(0).getDoubleValue, -1, 1)
     }
   }
 
