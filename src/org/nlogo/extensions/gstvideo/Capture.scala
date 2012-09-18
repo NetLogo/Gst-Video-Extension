@@ -24,11 +24,10 @@ import org.gstreamer.{ Bus, Caps, Element, ElementFactory, GstObject, Pipeline, 
 import org.gstreamer.elements.AppSink
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
-object Capture {
+object Capture extends VideoPrimitiveManager {
 
   private lazy val appSink        = initSink()
   private lazy val cameraPipeline = initPipeline()
-  private lazy val balance        = ElementFactory.make("videobalance", "balance")
   private lazy val scale          = ElementFactory.make("videoscale", "scale")
 
   private var recorder: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
@@ -36,10 +35,10 @@ object Capture {
   val image = Util.Image{ appSink.pullBuffer }{ buffer => recorder foreach (_.push(buffer)) }
 
   def unload() {
+    super.unload()
     appSink.dispose()
     cameraPipeline.setState(State.NULL)
     cameraPipeline.dispose()
-    balance.dispose()
     scale.dispose()
     recorder foreach (_.dispose())
   }
@@ -122,42 +121,6 @@ object Capture {
     override def perform(args: Array[Argument], context: Context) {
       val shouldAddBorders = !(args(0).getBooleanValue)
       scale.set("add-borders", shouldAddBorders)
-    }
-  }
-
-  object SetContrast extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      val contrast = args(0).getDoubleValue
-      if (contrast >= 0 && contrast <= 2) balance.set("contrast", contrast)
-      else                                throw new ExtensionException("Invalid contrast value: [0, 2] (Default is 1)")
-    }
-  }
-
-  object SetBrightness extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      val brightness = args(0).getDoubleValue
-      if (brightness >= -1 && brightness <= 1) balance.set("brightness", brightness)
-      else                                     throw new ExtensionException("Invalid brightness value: [-1, 1] (Default is 0)")
-    }
-  }
-
-  object SetHue extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      val hue = args(0).getDoubleValue
-      if (hue >= -1 && hue <= 1) balance.set("hue", hue)
-      else                       throw new ExtensionException("Invalid hue value: [-1, 1] (Default is 0)")
-    }
-  }
-
-  object SetSaturation extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      val saturation = args(0).getDoubleValue
-      if (saturation >= 0 && saturation <= 2) balance.set("saturation", saturation)
-      else                                    throw new ExtensionException("Invalid saturation value: [0, 2] (Default is 1)")
     }
   }
 

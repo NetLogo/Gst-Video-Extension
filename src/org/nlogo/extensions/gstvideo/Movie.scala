@@ -12,7 +12,7 @@ import swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
-object Movie {
+object Movie extends VideoPrimitiveManager {
   def unload() {
     if (player != null) {
       player.setState(State.NULL)
@@ -35,6 +35,7 @@ object Movie {
   private var playerFrame: JFrame = null
   private var playerFrameVideoComponent: VideoComponent = null
 
+  //@ Maybe extract this to `VideoPrimitiveManager`, too
   object SetStrechToFillScreen extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {
@@ -42,46 +43,6 @@ object Movie {
       val shouldAddBorders = !(args(0).getBooleanValue)
       scale.set("add-borders", shouldAddBorders)
       if (playerFrameVideoComponent != null) playerFrameVideoComponent.setKeepAspect(shouldAddBorders)
-    }
-  }
-
-  object SetContrast extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
-      val contrast = args(0).getDoubleValue
-      if (contrast >= 0 && contrast <= 2) balance.set("contrast", contrast)
-      else throw new ExtensionException("invalid contrast value: [0, 2] (Video is 1)")
-    }
-  }
-
-  object SetBrightness extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
-      val brightness = args(0).getDoubleValue
-      if (brightness >= -1 && brightness <= 1) balance.set("brightness", brightness)
-      else throw new ExtensionException("invalid brightness value: [-1, 1] (Video is 0)")
-    }
-  }
-
-  object SetHue extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
-      val contrast = args(0).getDoubleValue
-      if (contrast >= -1 && contrast <= 1) balance.set("hue", contrast)
-      else throw new ExtensionException("invalid hue value: [-1, 1] (Video is 0)")
-    }
-  }
-
-  object SetSaturation extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      if (balance == null) throw new ExtensionException("no videobalance element seems to exist")
-      val contrast = args(0).getDoubleValue
-      if (contrast >= 0 && contrast <= 2) balance.set("saturation", contrast)
-      else throw new ExtensionException("invalid saturation value: [0, 2] (Video is 1)")
     }
   }
 
