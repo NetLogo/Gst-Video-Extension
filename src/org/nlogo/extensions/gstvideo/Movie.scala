@@ -45,17 +45,6 @@ object Movie {
     }
   }
 
-  object SetFrameCacheSize extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      if (player == null || appSink == null) throw new ExtensionException("there is either no movie open or the pipeline is misconfigured")
-      val brightness = args(0).getDoubleValue
-      if (brightness >= -1 && brightness <= 1) balance.set("brightness", brightness)
-      else throw new ExtensionException("invalid brightness value: [-1, 1] (Video is 0)")
-    }
-  }
-
-  //@ UGHHHHHHHHHH!  WHY DID HE DUPLICATE THE CODE FOR THESE FILTERS?!?!??!?!
   object SetContrast extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
@@ -96,6 +85,7 @@ object Movie {
     }
   }
 
+  //@ Better yet: `StartLooping` and `StopLooping`
   object SetLooping extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.BooleanType))
     override def perform(args: Array[Argument], context: Context) {

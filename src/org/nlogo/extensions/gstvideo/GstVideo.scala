@@ -52,7 +52,6 @@ class GstVideo extends DefaultClassManager {
     primitiveManager.addPrimitive("movie-set-brightness",       Movie.SetBrightness)
     primitiveManager.addPrimitive("movie-set-hue",              Movie.SetHue)
     primitiveManager.addPrimitive("movie-set-saturation",       Movie.SetSaturation)
-    primitiveManager.addPrimitive("movie-set-frame-cache-size", Movie.SetFrameCacheSize)
     primitiveManager.addPrimitive("movie-set-looping",          Movie.SetLooping)
   }
 
