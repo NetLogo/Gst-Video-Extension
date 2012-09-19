@@ -20,19 +20,6 @@ object Movie extends VideoPrimitiveManager {
   private var lastBufferOpt: Option[Buffer] = None
   private var isLooping                     = false //@ Surely, there's some way to encapsulate this away somewhere
 
-  override protected val initExtraBusListeners = () => {
-
-    val padAddedElem = new Element.PAD_ADDED {
-      def padAdded(e: Element, p: Pad) {
-        println("PAD ADDED: " + p)
-      }
-    }
-
-    sinkBin.connect(padAddedElem)
-    player.connect(padAddedElem)
-
-  }
-
   override def unload() {
     player.setState(State.NULL)
     sinkBin.dispose()
@@ -56,6 +43,15 @@ object Movie extends VideoPrimitiveManager {
     })
 
     super.initBusListeners(playbin)
+
+    val padAddedElem = new Element.PAD_ADDED {
+      def padAdded(e: Element, p: Pad) {
+        println("PAD ADDED: " + p)
+      }
+    }
+
+    playbin.connect(padAddedElem)
+    player.connect(padAddedElem)
 
     playbin
 
