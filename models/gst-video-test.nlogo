@@ -150,7 +150,7 @@ INPUTBOX
 247
 123
 file-name
-../videos/car-kick.mp4
+../videos/station.mp4
 1
 0
 String
