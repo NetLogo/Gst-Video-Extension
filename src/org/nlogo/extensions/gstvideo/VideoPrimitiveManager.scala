@@ -24,9 +24,8 @@ trait VideoPrimitiveManager {
     scale.dispose()
   }
 
-  protected def mainBusOwner: Element            // Marks the `Element` onto which the bus listeners will be placed
-  protected def initExtraBusListeners = () => () // Override this is you have extra listeners you want initialized
-  protected def initBusListeners() {             // You should probably never override this --JAB (9/18/12)
+  protected def initExtraBusListeners = () => ()            // Override this is you have extra listeners you want initialized
+  protected def initBusListeners(mainBusOwner: Element) {   // You should probably never override this --JAB (9/18/12)
 
     if (isDebugging) {
 

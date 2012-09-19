@@ -8,7 +8,6 @@ import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 object Camera extends VideoPrimitiveManager {
 
   private lazy val cameraPipeline = initPipeline()
-  override protected lazy val mainBusOwner = cameraPipeline
 
   private var recorderOpt: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
 
@@ -23,7 +22,7 @@ object Camera extends VideoPrimitiveManager {
 
   private def initPipeline() : Pipeline = {
     val pipeline = new Pipeline("camera-capture")
-    super.initBusListeners()
+    super.initBusListeners(pipeline)
     pipeline
   }
 
