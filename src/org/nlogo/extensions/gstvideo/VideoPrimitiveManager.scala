@@ -54,7 +54,7 @@ trait VideoPrimitiveManager {
 
       mainBusOwner.getBus.connect(new Bus.STATE_CHANGED {
         override def stateChanged(source: GstObject, old: State, current: State, pending: State) {
-          if (source == mainBusOwner) {
+          if (source ne mainBusOwner) {
             println("Pipeline state changed from %s to %s".format(old, current))
           }
         }
