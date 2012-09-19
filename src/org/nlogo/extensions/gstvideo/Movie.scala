@@ -10,6 +10,7 @@ import org.gstreamer.{ GstObject, Pad, State, swing }, swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
+//@ Says that I need the Advanced Streaming Format demuxer when I want to play '.wmv' files
 object Movie extends VideoPrimitiveManager {
 
   private lazy val player      = initPlayer()
@@ -76,16 +77,17 @@ object Movie extends VideoPrimitiveManager {
       val capsString     = "video/x-raw-rgb, width=%d, height=%d".format(width.toInt, height.toInt)
       sizeFilter.setCaps(Caps.fromString(capsString))
 
-      sinkBin.addMany(scale, sizeFilter, balance, colorConverter, rate, appSink)
-      Element.linkMany(scale, sizeFilter, balance, colorConverter, rate, appSink)
+      val elements = List(scale, sizeFilter, balance, colorConverter, rate, appSink)
+      sinkBin.addMany(elements: _*)
+      Element.linkMany(elements: _*)
 
-      sinkBin.addPad(new GhostPad("sink", scale.getSinkPads.get(0)))
+      sinkBin.addPad(new GhostPad("sink", elements.head.getSinkPads.get(0)))
 
-      // Snippet from http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
-      val some_caps = new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255")
-
-      if (!Element.linkPadsFiltered(rate, "src", appSink, "sink", some_caps))
-        throw new ExtensionException("Failed to link video sinks")
+      // Snippet inspired by http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
+      val binCaps = new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255")
+//@      if (!Element.linkPadsFiltered(rate, "src", appSink, "sink", binCaps))
+//@        throw new ExtensionException("Failed to link video elements")
+      sinkBin.setCaps(binCaps) //@
 
       player.setVideoSink(sinkBin)
       player.setState(State.NULL)
@@ -149,7 +151,8 @@ object Movie extends VideoPrimitiveManager {
   } {
     buffer =>
       // If a buffer was cached and is not currently being relied on, dispose it now and cache current buffer
-      if (!lastBufferOpt.isEmpty && !lastBufferOpt.exists(_ == buffer)) lastBufferOpt foreach (_.dispose())
+      //@ The `if/else` is wrong; should just be an inner `if`
+      if (!lastBufferOpt.isEmpty && !lastBufferOpt.exists(_ eq buffer)) lastBufferOpt foreach (_.dispose())
       else                                                              lastBufferOpt = Option(buffer)
   }
 
