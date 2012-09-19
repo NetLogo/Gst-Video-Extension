@@ -153,8 +153,8 @@ object Movie extends VideoPrimitiveManager {
   } {
     buffer =>
     // If a buffer was cached and is not currently being relied on, dispose it now and cache current buffer
-      if (!lastBufferOpt.isEmpty && buffer != lastBufferOpt) lastBufferOpt foreach (_.dispose())
-      else                                                   lastBufferOpt = Option(buffer)
+      if (!lastBufferOpt.isEmpty && !lastBufferOpt.exists(_ == buffer)) lastBufferOpt foreach (_.dispose())
+      else                                                              lastBufferOpt = Option(buffer)
   }
 
   object IsPlaying extends VideoReporter {
