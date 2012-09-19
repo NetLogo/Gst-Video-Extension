@@ -10,7 +10,6 @@ import org.gstreamer.{ GstObject, Pad, State, swing }, swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
-//@ Says that I need the Advanced Streaming Format demuxer when I want to play '.wmv' files
 object Movie extends VideoPrimitiveManager {
 
   private lazy val player      = initPlayer()
