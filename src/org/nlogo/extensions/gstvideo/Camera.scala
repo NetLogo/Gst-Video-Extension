@@ -27,42 +27,6 @@ object Camera extends VideoPrimitiveManager {
     pipeline
   }
 
-  object IsRolling extends VideoReporter {
-    override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
-    override def report(args: Array[Argument], context: Context) : AnyRef = {
-      Boolean.box(cameraPipeline.getState == State.PLAYING)
-    }
-  }
-
-  object StartRecording extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-
-      import Codec.Theora, Quality.Medium
-      val codec = new Theora(Medium)
-      val (propNames, propValues, encoder) = codec.getProps
-
-      val fps       = 30
-      val filename  = args(0).getString
-      val file      = new File(filename)
-      val patchSize = context.getAgent.world.patchSize
-      val width     = args(1).getDoubleValue * patchSize
-      val height    = args(2).getDoubleValue * patchSize
-      val muxer     = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
-
-      recorderOpt = Option(new Recorder("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file))
-      recorderOpt foreach (_.start())
-
-    }
-  }
-
-  object StopRecording extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int]())
-    override def perform(args: Array[Argument], context: Context) {
-      recorderOpt foreach (_.stop())
-    }
-  }
-
   object InitCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
@@ -95,6 +59,41 @@ object Camera extends VideoPrimitiveManager {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       cameraPipeline.setState(State.NULL)
+    }
+  }
+  object StartRecording extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
+    override def perform(args: Array[Argument], context: Context) {
+
+      import Codec.Theora, Quality.Medium
+      val codec = new Theora(Medium)
+      val (propNames, propValues, encoder) = codec.getProps
+
+      val fps       = 30
+      val filename  = args(0).getString
+      val file      = new File(filename)
+      val patchSize = context.getAgent.world.patchSize
+      val width     = args(1).getDoubleValue * patchSize
+      val height    = args(2).getDoubleValue * patchSize
+      val muxer     = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
+
+      recorderOpt = Option(new Recorder("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file))
+      recorderOpt foreach (_.start())
+
+    }
+  }
+
+  object StopRecording extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
+    override def perform(args: Array[Argument], context: Context) {
+      recorderOpt foreach (_.stop())
+    }
+  }
+
+  object IsRolling extends VideoReporter {
+    override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
+    override def report(args: Array[Argument], context: Context) : AnyRef = {
+      Boolean.box(cameraPipeline.getState == State.PLAYING)
     }
   }
 

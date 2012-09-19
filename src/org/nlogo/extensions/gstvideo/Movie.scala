@@ -62,20 +62,6 @@ object Movie extends VideoPrimitiveManager {
 
   }
 
-  object StartLooping extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int]())
-    override def perform(args: Array[Argument], context: Context) {
-      isLooping = true
-    }
-  }
-
-  object StopLooping extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int]())
-    override def perform(args: Array[Argument], context: Context) {
-      isLooping = false
-    }
-  }
-
   object OpenMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
@@ -135,45 +121,6 @@ object Movie extends VideoPrimitiveManager {
     }
   }
 
-  object IsPlaying extends VideoReporter {
-    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.BooleanType)
-    override def report(args: Array[Argument], context: Context) = Boolean.box(player.isPlaying)
-  }
-
-  object MovieDurationSeconds extends VideoReporter {
-    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context) = Double.box(player.queryDuration(TimeUnit.SECONDS))
-  }
-
-  object MovieDurationMilliseconds extends VideoReporter {
-    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context) = Double.box(player.queryDuration(TimeUnit.MILLISECONDS))
-  }
-
-  object CurrentTimeSeconds extends VideoReporter {
-    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context) = Double.box(player.queryPosition(TimeUnit.SECONDS))
-  }
-
-  object CurrentTimeMilliseconds extends VideoReporter {
-    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
-    override def report(args: Array[Argument], context: Context) = Double.box(player.queryPosition(TimeUnit.MILLISECONDS))
-  }
-
-  object SetTimeSeconds extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      player.seek(ClockTime.fromSeconds(args(0).getDoubleValue.longValue))
-    }
-  }
-
-  object SetTimeMilliseconds extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
-    override def perform(args: Array[Argument], context: Context) {
-      player.seek(ClockTime.fromMillis(args(0).getDoubleValue.longValue))
-    }
-  }
-
   object OpenPlayer extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
@@ -205,9 +152,62 @@ object Movie extends VideoPrimitiveManager {
     Option(appSink.pullBuffer) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
   } {
     buffer =>
-      // If a buffer was cached and is not currently being relied on, dispose it now and cache current buffer
+    // If a buffer was cached and is not currently being relied on, dispose it now and cache current buffer
       if (!lastBufferOpt.isEmpty && buffer != lastBufferOpt) lastBufferOpt foreach (_.dispose())
       else                                                   lastBufferOpt = Option(buffer)
+  }
+
+  object IsPlaying extends VideoReporter {
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.BooleanType)
+    override def report(args: Array[Argument], context: Context) = Boolean.box(player.isPlaying)
+  }
+
+  object SetTimeSeconds extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def perform(args: Array[Argument], context: Context) {
+      player.seek(ClockTime.fromSeconds(args(0).getDoubleValue.longValue))
+    }
+  }
+
+  object SetTimeMilliseconds extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
+    override def perform(args: Array[Argument], context: Context) {
+      player.seek(ClockTime.fromMillis(args(0).getDoubleValue.longValue))
+    }
+  }
+
+  object CurrentTimeSeconds extends VideoReporter {
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
+    override def report(args: Array[Argument], context: Context) = Double.box(player.queryPosition(TimeUnit.SECONDS))
+  }
+
+  object CurrentTimeMilliseconds extends VideoReporter {
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
+    override def report(args: Array[Argument], context: Context) = Double.box(player.queryPosition(TimeUnit.MILLISECONDS))
+  }
+
+  object MovieDurationSeconds extends VideoReporter {
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
+    override def report(args: Array[Argument], context: Context) = Double.box(player.queryDuration(TimeUnit.SECONDS))
+  }
+
+  object MovieDurationMilliseconds extends VideoReporter {
+    override def getSyntax                                       = Syntax.reporterSyntax(Syntax.NumberType)
+    override def report(args: Array[Argument], context: Context) = Double.box(player.queryDuration(TimeUnit.MILLISECONDS))
+  }
+
+  object StartLooping extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
+    override def perform(args: Array[Argument], context: Context) {
+      isLooping = true
+    }
+  }
+
+  object StopLooping extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
+    override def perform(args: Array[Argument], context: Context) {
+      isLooping = false
+    }
   }
 
 }
