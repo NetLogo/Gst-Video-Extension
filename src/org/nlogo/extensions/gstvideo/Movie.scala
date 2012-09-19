@@ -42,16 +42,18 @@ object Movie extends VideoPrimitiveManager {
       }
     })
 
-    super.initBusListeners(playbin)
+    super.initBusListeners(playbin, () => {
 
-    val padAddedElem = new Element.PAD_ADDED {
-      def padAdded(e: Element, p: Pad) {
-        println("PAD ADDED: " + p)
+      val padAddedElem = new Element.PAD_ADDED {
+        def padAdded(e: Element, p: Pad) {
+          println("PAD ADDED: " + p)
+        }
       }
-    }
 
-    sinkBin.connect(padAddedElem)
-    playbin.connect(padAddedElem)
+      sinkBin.connect(padAddedElem)
+      playbin.connect(padAddedElem)
+
+    })
 
     playbin
 

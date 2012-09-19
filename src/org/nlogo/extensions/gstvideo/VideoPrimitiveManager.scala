@@ -24,7 +24,8 @@ trait VideoPrimitiveManager {
     scale.dispose()
   }
 
-  protected def initBusListeners(mainBusOwner: Element) {   // You should probably never override this --JAB (9/18/12)
+  // You should probably never override this --JAB (9/18/12)
+  protected def initBusListeners(mainBusOwner: Element, initExtras: () => Unit = () => ()) {
 
     if (isDebugging) {
 
@@ -59,6 +60,8 @@ trait VideoPrimitiveManager {
           }
         }
       })
+
+      initExtras()
 
     }
 
