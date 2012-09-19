@@ -90,7 +90,7 @@ object Movie extends VideoPrimitiveManager {
       val some_caps = new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255")
 
       if (!Element.linkPadsFiltered(rate, "src", appSink, "sink", some_caps))
-        throw new ExtensionException("Failed linking ffmpegcolorspace with appsink")
+        throw new ExtensionException("Failed to link video sinks")
 
       player.setVideoSink(sinkBin)
       player.setState(State.NULL)
