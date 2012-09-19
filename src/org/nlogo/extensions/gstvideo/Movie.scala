@@ -148,7 +148,7 @@ object Movie extends VideoPrimitiveManager {
     player.setState(currentState)
   }
 
-  val image = Util.Image {
+  val Image = Util.Image {
     Option(appSink.pullBuffer) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
   } {
     buffer =>
