@@ -50,8 +50,8 @@ object Movie extends VideoPrimitiveManager {
       }
     }
 
+    sinkBin.connect(padAddedElem)
     playbin.connect(padAddedElem)
-    player.connect(padAddedElem)
 
     playbin
 
