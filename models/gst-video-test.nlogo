@@ -1,6 +1,6 @@
 extensions [gst-video bitmap]
 
-globals [used-drawing-layer]
+globals [used-drawing-layer current-pos]
 
 
 to load-movie
@@ -14,11 +14,15 @@ end
 
 to pause-movie
   gst-video:movie-stop
+  set current-pos seek-pos
 end
 
 to seek-to-current-pos
-  let new-pos (seek-pos / 100) * gst-video:movie-duration-millisecs
-  gst-video:movie-set-time-millisecs new-pos
+  if (current-pos != seek-pos) [
+    let new-pos (seek-pos / 100) * gst-video:movie-duration-millisecs
+    gst-video:movie-set-time-millisecs new-pos
+    set current-pos seek-pos
+  ]
 end
 
 to mov-mirror-to-patches
@@ -31,12 +35,14 @@ to mov-mirror-to-patches
 end
 
 to mov-mirror-to-drawing
-  if (gst-video:movie-playing?) [
-    mov-update-fx
-    bitmap:copy-to-drawing gst-video:movie-image 0 0
-    if (gst-video:movie-playing?) [update-slider]
-    display
+  mov-update-fx
+  bitmap:copy-to-drawing gst-video:movie-image 0 0
+  ifelse (gst-video:movie-playing?) [
+    update-slider
+  ] [
+    seek-to-current-pos
   ]
+  display
 end
 
 to update-slider
@@ -83,7 +89,6 @@ to cam-mirror-to-drawing
     display
     set used-drawing-layer true
   ]
-  
 end
 
 to random-fx
@@ -617,7 +622,7 @@ INPUTBOX
 186
 666
 rec-filename
-test.mkv
+webcam_recording.ogg
 1
 0
 String
