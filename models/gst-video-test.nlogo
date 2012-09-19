@@ -26,17 +26,18 @@ to seek-to-current-pos
 end
 
 to mov-mirror-to-patches
-  if (gst-video:movie-playing?) [
-    mov-update-fx
-    bitmap:copy-to-pcolors gst-video:movie-image false
-    if (gst-video:movie-playing?) [update-slider]
-    display
-  ]
+  mirror-to-patches
+  mov-mirror (task [ bitmap:copy-to-pcolors gst-video:movie-image false ])
 end
 
 to mov-mirror-to-drawing
+  mirror-to-drawing
+  mov-mirror (task [ bitmap:copy-to-drawing gst-video:movie-image 0 0 ])
+end
+
+to mov-mirror [thunk]
   mov-update-fx
-  bitmap:copy-to-drawing gst-video:movie-image 0 0
+  run thunk
   ifelse (gst-video:movie-playing?) [
     update-slider
   ] [
@@ -48,12 +49,9 @@ end
 to update-slider
   let current-time gst-video:movie-time-millisecs
   let duration gst-video:movie-duration-millisecs
-  
   let completed-percent (current-time / duration)
   set completed-percent completed-percent * 100
-  
   set seek-pos (round completed-percent)
-  
 end
 
 to init-webcam
@@ -69,26 +67,32 @@ to stop-webcam
 end
 
 to cam-mirror-to-patches
-  
-  if (used-drawing-layer != 0 and used-drawing-layer) [
-   clear-all
-   set used-drawing-layer false 
-  ]
-  
+  mirror-to-patches
+  cam-mirror (task [ bitmap:copy-to-pcolors gst-video:camera-image false ])
+end
+
+to cam-mirror-to-drawing
+  mirror-to-drawing
+  cam-mirror (task [ bitmap:copy-to-drawing gst-video:camera-image 0 0 ])
+end
+
+to cam-mirror [thunk]
   if (gst-video:camera-is-rolling?) [
     cam-update-fx
-    bitmap:copy-to-pcolors gst-video:camera-image false
+    run thunk 
     display
   ]
 end
 
-to cam-mirror-to-drawing
-  if (gst-video:camera-is-rolling?) [
-    cam-update-fx
-    bitmap:copy-to-drawing gst-video:camera-image 0 0
-    display
-    set used-drawing-layer true
+to mirror-to-patches
+  if (used-drawing-layer = true) [
+   clear-all
+   set used-drawing-layer false 
   ]
+end
+
+to mirror-to-drawing
+  set used-drawing-layer true
 end
 
 to random-fx
@@ -339,7 +343,7 @@ seek-pos
 seek-pos
 0
 100
-100
+0
 1
 1
 %
