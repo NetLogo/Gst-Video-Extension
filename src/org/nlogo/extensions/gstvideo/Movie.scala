@@ -67,7 +67,7 @@ object Movie extends VideoPrimitiveManager {
     override def perform(args: Array[Argument], context: Context) {
 
       val patchSize = context.getAgent.world.patchSize
-      val width     = args(1).getDoubleValue * patchSize
+      val width     = args(1).getDoubleValue * patchSize //@ Why pass these in as arguments?
       val height    = args(2).getDoubleValue * patchSize
       val filename  =
         try context.attachCurrentDirectory(args(0).getString)
