@@ -149,7 +149,8 @@ object Movie extends VideoPrimitiveManager {
   }
 
   val Image = Util.Image {
-    Option(appSink.pullBuffer) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
+    val buff = if (player.getState == State.PLAYING) appSink.pullBuffer() else appSink.pullPreroll()
+    Option(buff) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
   } {
     buffer =>
       // If a buffer was cached and is not currently being relied on, dispose it now and cache current buffer
