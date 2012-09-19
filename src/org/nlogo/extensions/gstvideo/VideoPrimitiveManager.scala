@@ -1,7 +1,8 @@
 package org.nlogo.extensions.gstvideo
 
-import org.gstreamer.{ Bus, Element, ElementFactory, elements, GstObject, State, TagList }, elements.AppSink
-import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax}
+import java.awt.image.{ BufferedImage, DataBufferInt, DirectColorModel, Raster, SampleModel, WritableRaster }
+import org.gstreamer.{ Buffer, Bus, Element, ElementFactory, elements, GstObject, State, TagList }, elements.AppSink
+import org.nlogo.api.{ Argument, Context, DefaultReporter, ExtensionException, Syntax}
 
 /**
  * Created with IntelliJ IDEA.
@@ -77,6 +78,14 @@ trait VideoPrimitiveManager {
     sink
   }
 
+  protected def determineWorldDimensions(context: Context) : (Double, Double) = {
+    val world     = context.getAgent.world
+    val patchSize = world.patchSize
+    val width     = world.worldWidth  * patchSize
+    val height    = world.worldHeight * patchSize
+    (width, height)
+  }
+
   def generateColorspaceConverter : Element = ElementFactory.make("ffmpegcolorspace", "colorspace-converter")
   def generateVideoFilter         : Element = ElementFactory.make("capsfilter",       "video-filter")
 
@@ -131,6 +140,47 @@ trait VideoPrimitiveManager {
       balance.set(settingName, value)
     else
       throw new ExtensionException("invalid %s value: %f (must be within [%f, %f])".format(settingName, value, min, max))
+  }
+
+  object Image extends DefaultReporter {
+    override def getSyntax           = Syntax.reporterSyntax(Array[Int](), Syntax.WildcardType)
+    override def getAgentClassString = "O"
+    override def report(args: Array[Argument], context: Context) : AnyRef = {
+      try {
+
+        val buffer          = generateBuffer
+        val structure       = buffer.getCaps.getStructure(0)
+        val (width, height) = (structure.getInteger("width"), structure.getInteger("height"))
+
+        val intBuf          = buffer.getByteBuffer.asIntBuffer
+        val imageData       = new Array[Int](intBuf.capacity)
+        intBuf.get(imageData, 0, imageData.length)
+
+        cleanup(buffer)
+
+        getBufferedImage(imageData, width, height)
+
+      }
+      catch {
+        case e: Exception => throw new ExtensionException(e.getMessage)
+      }
+    }
+  }
+
+  protected def generateBuffer : Buffer
+  protected def cleanup(buffer: Buffer)
+
+  protected def getBufferedImage(data: Array[Int], width: Int, height: Int) : BufferedImage = {
+
+    def colorModel =
+      new DirectColorModel(32, 0xff0000, 0xff00, 0xff)
+    def getRGBSampleModel(width: Int, height: Int) : SampleModel =
+      colorModel.createCompatibleWritableRaster(1, 1).getSampleModel.createCompatibleSampleModel(width, height)
+    def getRaster(model: SampleModel, data: Array[Int]) : WritableRaster =
+      Raster.createWritableRaster(model, new DataBufferInt(data, data.length, 0), null)
+
+    new BufferedImage(colorModel, getRaster(getRGBSampleModel(width, height), data), false, null)
+
   }
 
 }

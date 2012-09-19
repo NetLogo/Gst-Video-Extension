@@ -1,7 +1,7 @@
 package org.nlogo.extensions.gstvideo
 
 import java.io.File
-import org.gstreamer.{ Caps, Element, ElementFactory, Pipeline, State }
+import org.gstreamer.{ Buffer, Caps, Element, ElementFactory, Pipeline, State }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 // The code here used to look like the code from Andres Colubri's GSVideo.  Not anymore. --JAB (9/18/12)
@@ -11,7 +11,8 @@ object Camera extends VideoPrimitiveManager {
 
   private var recorderOpt: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
 
-  val Image = Util.Image{ appSink.pullBuffer }{ buffer => recorderOpt foreach (_.push(buffer)) }
+  override protected def generateBuffer          = appSink.pullBuffer
+  override protected def cleanup(buffer: Buffer) { recorderOpt foreach (_.push(buffer)) }
 
   override def unload() {
     super.unload()
@@ -30,11 +31,7 @@ object Camera extends VideoPrimitiveManager {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
 
-      val world     = context.getAgent.world
-      val patchSize = world.patchSize
-      val width     = world.worldWidth  * patchSize
-      val height    = world.worldHeight * patchSize
-
+      val (width, height) = determineWorldDimensions(context)
       val webcamSource   = ElementFactory.make("qtkitvideosrc", "capture")
       val colorConverter = generateColorspaceConverter
       val videoFilter    = generateVideoFilter
@@ -49,7 +46,7 @@ object Camera extends VideoPrimitiveManager {
   }
 
   object StartCamera extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       cameraPipeline.setState(State.PLAYING)
     }
@@ -62,20 +59,18 @@ object Camera extends VideoPrimitiveManager {
     }
   }
   object StartRecording extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType))
     override def perform(args: Array[Argument], context: Context) {
 
       import Codec.Theora, Quality.Medium
       val codec = new Theora(Medium)
       val (propNames, propValues, encoder) = codec.getProps
 
-      val fps       = 30
-      val filename  = args(0).getString
-      val file      = new File(filename)
-      val patchSize = context.getAgent.world.patchSize
-      val width     = args(1).getDoubleValue * patchSize
-      val height    = args(2).getDoubleValue * patchSize
-      val muxer     = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
+      val fps             = 30
+      val filename        = args(0).getString
+      val file            = new File(filename)
+      val (width, height) = determineWorldDimensions(context)
+      val muxer           = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
 
       recorderOpt = Option(new Recorder("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file))
       recorderOpt foreach (_.start())

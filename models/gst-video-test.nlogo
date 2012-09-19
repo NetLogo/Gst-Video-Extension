@@ -59,7 +59,7 @@ to start-webcam
     gst-video:camera-init
     set cam-is-inited? true
   ]
-  gst-video:camera-start 0 0 
+  gst-video:camera-start
 end
 
 to stop-webcam
@@ -530,7 +530,7 @@ BUTTON
 245
 465
 open-player
-gst-video:movie-open-player world-width world-height \n
+gst-video:movie-open-player
 NIL
 1
 T
@@ -575,7 +575,7 @@ BUTTON
 113
 602
 start recording
-gst-video:camera-start-recording rec-filename world-width world-height
+gst-video:camera-start-recording rec-filename
 NIL
 1
 T

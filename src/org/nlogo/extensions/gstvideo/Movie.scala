@@ -25,6 +25,16 @@ object Movie extends VideoPrimitiveManager {
     sinkBin.dispose()
   }
 
+  override protected def generateBuffer : Buffer = {
+    val buff = if (player.getState == State.PLAYING) appSink.pullBuffer() else appSink.pullPreroll()
+    Option(buff) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
+  }
+
+  override protected def cleanup(buffer: Buffer) {
+    lastBufferOpt foreach { case lastBuffer => if (lastBuffer ne buffer) lastBuffer.dispose() }
+    lastBufferOpt = Option(buffer)
+  }
+
   override protected def setFullscreen(isStretching: Boolean) {
     super.setFullscreen(isStretching)
     frameVideo.setKeepAspect(!isStretching)
@@ -63,11 +73,8 @@ object Movie extends VideoPrimitiveManager {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType))
     override def perform(args: Array[Argument], context: Context) {
 
-      val world     = context.getAgent.world
-      val patchSize = world.patchSize
-      val width     = world.worldWidth  * patchSize
-      val height    = world.worldHeight * patchSize
-      val filename  =
+      val (width, height) = determineWorldDimensions(context)
+      val filename =
         try context.attachCurrentDirectory(args(0).getString)
         catch {
           case e: IOException => throw new ExtensionException(e.getMessage)
@@ -121,20 +128,15 @@ object Movie extends VideoPrimitiveManager {
   }
 
   object OpenPlayer extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-
-      val patchSize    = context.getAgent.world.patchSize
-      val width        = args(0).getDoubleValue * patchSize
-      val height       = args(1).getDoubleValue * patchSize
-      val videoSink    = frameVideo.getElement
-
+      val (width, height) = determineWorldDimensions(context)
+      val videoSink       = frameVideo.getElement
       setPlayerSink(videoSink)
       frameVideo.setPreferredSize(new Dimension(width.toInt, height.toInt))
       playerFrame.add(frameVideo, BorderLayout.CENTER)
       playerFrame.pack()
       playerFrame.setVisible(true)
-
     }
   }
 
@@ -145,15 +147,6 @@ object Movie extends VideoPrimitiveManager {
     player.setState(State.NULL)
     player.setVideoSink(sink)
     player.setState(currentState)
-  }
-
-  val Image = Util.Image {
-    val buff = if (player.getState == State.PLAYING) appSink.pullBuffer() else appSink.pullPreroll()
-    Option(buff) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
-  } {
-    buffer =>
-      lastBufferOpt foreach { case lastBuffer => if (lastBuffer ne buffer) lastBuffer.dispose() }
-      lastBufferOpt = Option(buffer)
   }
 
   object IsPlaying extends VideoReporter {
