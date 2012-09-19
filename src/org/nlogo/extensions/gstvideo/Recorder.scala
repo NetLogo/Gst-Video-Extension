@@ -15,7 +15,7 @@ class Recorder(name: String, width: Int, height: Int, fps: Int, encoderStr: Stri
                encoderPropNames: Array[String], encoderPropData: Array[AnyRef],
                muxerStr: String, file: File) {
 
-  private var isRecording = false
+  private var isRecording = false  //@ This variable may well be replacable by `sink.isPlaying`; investigate
   private val sink        = new RGBDataFileSink("Recorder", width, height, fps, encoderStr,
                                                 encoderPropNames, encoderPropData, muxerStr, file)
 
