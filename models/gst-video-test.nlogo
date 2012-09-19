@@ -1,6 +1,6 @@
 extensions [gst-video bitmap]
 
-globals [used-drawing-layer current-pos]
+globals [used-drawing-layer current-pos cam-is-inited?]
 
 
 to load-movie
@@ -54,11 +54,11 @@ to update-slider
   set seek-pos (round completed-percent)
 end
 
-to init-webcam
-  gst-video:camera-init
-end
-
 to start-webcam
+  if (not (cam-is-inited? = true)) [
+    gst-video:camera-init
+    set cam-is-inited? true
+  ]
   gst-video:camera-start 0 0 
 end
 
@@ -250,27 +250,10 @@ NIL
 1
 
 BUTTON
-939
-52
-1139
-85
-Initialize Webcam
-init-webcam
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
 937
-128
+69
 1140
-161
+102
 Start Webcam
 start-webcam
 NIL
@@ -285,9 +268,9 @@ NIL
 
 BUTTON
 937
-162
+103
 1140
-195
+136
 Stop Webcam
 stop-webcam
 NIL
@@ -302,9 +285,9 @@ NIL
 
 BUTTON
 939
-246
+187
 1139
-279
+220
 NIL
 cam-mirror-to-patches
 T
@@ -319,9 +302,9 @@ NIL
 
 BUTTON
 939
-280
+221
 1139
-313
+254
 NIL
 cam-mirror-to-drawing
 T
@@ -513,9 +496,9 @@ NIL
 
 TEXTBOX
 940
-107
+48
 1011
-129
+70
 Controls:
 14
 0.0
@@ -523,9 +506,9 @@ Controls:
 
 TEXTBOX
 941
-226
+167
 1091
-244
+185
 Mirroring options:
 14
 0.0
