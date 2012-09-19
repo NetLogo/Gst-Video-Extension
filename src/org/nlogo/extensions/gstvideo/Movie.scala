@@ -39,7 +39,7 @@ object Movie extends VideoPrimitiveManager {
     playbin.getBus.connect(new Bus.EOS {
       override def endOfStream(source: GstObject) {
         if (isLooping) playbin.seek(ClockTime.fromSeconds(0))
-        else           playbin.setState(State.PAUSED)
+        else           playbin.setState(State.READY)
       }
     })
 
