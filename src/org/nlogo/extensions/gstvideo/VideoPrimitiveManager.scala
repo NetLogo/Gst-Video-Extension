@@ -60,8 +60,6 @@ trait VideoPrimitiveManager {
         }
       })
 
-      initExtraBusListeners()
-
     }
 
   }
