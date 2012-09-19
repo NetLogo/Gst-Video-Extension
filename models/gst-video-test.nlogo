@@ -4,7 +4,7 @@ globals [used-drawing-layer current-pos]
 
 
 to load-movie
-  gst-video:movie-open file-name world-width world-height 
+  gst-video:movie-open file-name
   set seek-pos 0
 end
 
@@ -55,7 +55,7 @@ to update-slider
 end
 
 to init-webcam
-  gst-video:camera-init world-width world-height
+  gst-video:camera-init
 end
 
 to start-webcam

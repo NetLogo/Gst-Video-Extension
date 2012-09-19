@@ -60,12 +60,13 @@ object Movie extends VideoPrimitiveManager {
   }
 
   object OpenMovie extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType, Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType))
     override def perform(args: Array[Argument], context: Context) {
 
-      val patchSize = context.getAgent.world.patchSize
-      val width     = args(1).getDoubleValue * patchSize //@ Why pass these in as arguments?
-      val height    = args(2).getDoubleValue * patchSize
+      val world     = context.getAgent.world
+      val patchSize = world.patchSize
+      val width     = world.worldWidth  * patchSize
+      val height    = world.worldHeight * patchSize
       val filename  =
         try context.attachCurrentDirectory(args(0).getString)
         catch {

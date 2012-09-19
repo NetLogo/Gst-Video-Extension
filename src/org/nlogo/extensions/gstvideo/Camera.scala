@@ -27,12 +27,13 @@ object Camera extends VideoPrimitiveManager {
   }
 
   object InitCamera extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
 
-      val patchSize     = context.getAgent.world.patchSize
-      val width         = args(0).getDoubleValue * patchSize
-      val height        = args(1).getDoubleValue * patchSize
+      val world     = context.getAgent.world
+      val patchSize = world.patchSize
+      val width     = world.worldWidth  * patchSize
+      val height    = world.worldHeight * patchSize
 
       val webcamSource   = ElementFactory.make("qtkitvideosrc", "capture")
       val colorConverter = generateColorspaceConverter
