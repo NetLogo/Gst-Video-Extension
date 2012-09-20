@@ -117,13 +117,6 @@ object Movie extends VideoPrimitiveManager {
     }
   }
 
-  object CloseMovie extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int]())
-    override def perform(args: Array[Argument], context: Context) {
-      playerFrame.setVisible(false)
-    }
-  }
-
   object OpenPlayer extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
@@ -135,6 +128,13 @@ object Movie extends VideoPrimitiveManager {
       playerFrame.add(frameVideo, BorderLayout.CENTER)
       playerFrame.pack()
       playerFrame.setVisible(true)
+    }
+  }
+
+  object ClosePlayer extends VideoCommand {
+    override def getSyntax = Syntax.commandSyntax(Array[Int]())
+    override def perform(args: Array[Argument], context: Context) {
+      playerFrame.setVisible(false)
     }
   }
 
