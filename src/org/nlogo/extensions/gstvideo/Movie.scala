@@ -95,9 +95,7 @@ object Movie extends VideoPrimitiveManager {
       // Snippet inspired by http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
       // These caps are necessary to get video hue flipped
       val sinkCaps = new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255")
-//@      if (!Element.linkPadsFiltered(rate, "src", appSink, "sink", binCaps))
-//@        throw new ExtensionException("Failed to link video elements")
-      appSink.setCaps(sinkCaps) //@
+      appSink.setCaps(sinkCaps)
 
       player.setVideoSink(sinkBin)
       player.setState(State.NULL)
