@@ -39,8 +39,9 @@ object Camera extends VideoPrimitiveManager {
       videoFilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"))
       appSink.setCaps(Caps.fromString("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=24, pixel-aspect-ratio=480/640".format(width.toInt, height.toInt)))
 
-      cameraPipeline.addMany(webcamSource, colorConverter, videoFilter, scale, balance, appSink)
-      Element.linkMany(webcamSource, colorConverter, videoFilter, scale, balance, appSink)
+      val elements = List(webcamSource, colorConverter, videoFilter, scale, balance, appSink)
+      cameraPipeline.addMany(elements: _*)
+      Element.linkMany(elements: _*)
 
     }
   }
