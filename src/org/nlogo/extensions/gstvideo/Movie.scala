@@ -97,8 +97,6 @@ object Movie extends VideoPrimitiveManager {
       val sinkCaps = new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255")
       appSink.setCaps(sinkCaps)
 
-      player.setVideoSink(sinkBin)
-      player.setState(State.NULL)
       player.set("uri", "file://" + filename)
 
     }
@@ -107,6 +105,7 @@ object Movie extends VideoPrimitiveManager {
   object StartMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
+      setVideoSink(sinkBin)
       player.setState(State.PLAYING)
     }
   }
@@ -122,7 +121,6 @@ object Movie extends VideoPrimitiveManager {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       playerFrame.setVisible(false)
-      setPlayerSink(sinkBin)
     }
   }
 
@@ -131,7 +129,8 @@ object Movie extends VideoPrimitiveManager {
     override def perform(args: Array[Argument], context: Context) {
       val (width, height) = determineWorldDimensions(context)
       val videoSink       = frameVideo.getElement
-      setPlayerSink(videoSink)
+      setVideoSink(videoSink)
+      player.setState(State.PLAYING)
       frameVideo.setPreferredSize(new Dimension(width.toInt, height.toInt))
       playerFrame.add(frameVideo, BorderLayout.CENTER)
       playerFrame.pack()
@@ -139,13 +138,10 @@ object Movie extends VideoPrimitiveManager {
     }
   }
 
-  // It seems to switch video sinks the pipeline needs to be reconfigured.  Set to NULL and rebuild.
-  //@ Weird hack; must investigate
-  private def setPlayerSink(sink: Element) {
-    val currentState = player.getState
+  // A necessary semi-hack for swapping in new video sinks on the fly
+  private def setVideoSink(sink: Element) {
     player.setState(State.NULL)
     player.setVideoSink(sink)
-    player.setState(currentState)
   }
 
   object IsPlaying extends VideoReporter {
