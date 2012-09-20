@@ -10,12 +10,12 @@ import org.gstreamer.{ Buffer, elements }, elements.RGBDataFileSink
  * Time: 12:44 PM
  */
 
-// A wrapper around a sink
+// A wrapper around a recording sink
 class Recorder(name: String, width: Int, height: Int, fps: Int, encoderStr: String,
                encoderPropNames: Array[String], encoderPropData: Array[AnyRef],
                muxerStr: String, file: File) {
 
-  private var isRecording = false  //@ This variable may well be replacable by `sink.isPlaying`; investigate
+  private var isRecording = false
   private val sink        = new RGBDataFileSink("Recorder", width, height, fps, encoderStr,
                                                 encoderPropNames, encoderPropData, muxerStr, file)
 
