@@ -156,7 +156,7 @@ trait VideoPrimitiveManager {
         val imageData       = new Array[Int](intBuf.capacity)
         intBuf.get(imageData, 0, imageData.length)
 
-        cleanup(buffer)
+        handleImageBuffer(buffer)
 
         getBufferedImage(imageData, width, height)
 
@@ -168,7 +168,7 @@ trait VideoPrimitiveManager {
   }
 
   protected def generateBuffer : Buffer
-  protected def cleanup(buffer: Buffer)
+  protected def handleImageBuffer(buffer: Buffer)
 
   protected def getBufferedImage(data: Array[Int], width: Int, height: Int) : BufferedImage = {
 

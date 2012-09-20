@@ -11,8 +11,8 @@ object Camera extends VideoPrimitiveManager {
 
   private var recorderOpt: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
 
-  override protected def generateBuffer          = appSink.pullBuffer
-  override protected def cleanup(buffer: Buffer) { recorderOpt foreach (_.push(buffer)) }
+  override protected def generateBuffer                    = appSink.pullBuffer
+  override protected def handleImageBuffer(buffer: Buffer) { recorderOpt foreach (_.push(buffer)) }
 
   override def unload() {
     super.unload()

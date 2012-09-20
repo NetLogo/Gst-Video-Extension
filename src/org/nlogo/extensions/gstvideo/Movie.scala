@@ -30,7 +30,7 @@ object Movie extends VideoPrimitiveManager {
     Option(buff) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
   }
 
-  override protected def cleanup(buffer: Buffer) {
+  override protected def handleImageBuffer(buffer: Buffer) {
     lastBufferOpt foreach { case lastBuffer => if (lastBuffer ne buffer) lastBuffer.dispose() }
     lastBufferOpt = Option(buffer)
   }
