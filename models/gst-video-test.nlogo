@@ -547,7 +547,7 @@ BUTTON
 245
 502
 close-player
-gst-video:movie-close
+gst-video:movie-close-player
 NIL
 1
 T
