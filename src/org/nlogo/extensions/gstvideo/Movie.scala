@@ -21,7 +21,7 @@ object Movie extends VideoPrimitiveManager {
   private var isLooping                     = false //@ Surely, there's some way to encapsulate this away somewhere
 
   override def unload() {
-    player.setState(State.NULL)
+    player.stop()
     sinkBin.dispose()
   }
 
@@ -48,7 +48,7 @@ object Movie extends VideoPrimitiveManager {
     playbin.getBus.connect(new Bus.EOS {
       override def endOfStream(source: GstObject) {
         if (isLooping) playbin.seek(ClockTime.fromSeconds(0))
-        else           playbin.setState(State.READY)
+        else           playbin.ready()
       }
     })
 
@@ -106,14 +106,14 @@ object Movie extends VideoPrimitiveManager {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
       setVideoSink(sinkBin)
-      player.setState(State.PLAYING)
+      player.play()
     }
   }
 
   object StopMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      player.setState(State.PAUSED)
+      player.pause()
     }
   }
 
@@ -123,7 +123,7 @@ object Movie extends VideoPrimitiveManager {
       val (width, height) = determineWorldDimensions(context)
       val videoSink       = frameVideo.getElement
       setVideoSink(videoSink)
-      player.setState(State.PLAYING)
+      player.play()
       frameVideo.setPreferredSize(new Dimension(width.toInt, height.toInt))
       playerFrame.add(frameVideo, BorderLayout.CENTER)
       playerFrame.pack()
@@ -140,7 +140,7 @@ object Movie extends VideoPrimitiveManager {
 
   // A necessary semi-hack for swapping in new video sinks on the fly
   private def setVideoSink(sink: Element) {
-    player.setState(State.NULL)
+    player.stop()
     player.setVideoSink(sink)
   }
 

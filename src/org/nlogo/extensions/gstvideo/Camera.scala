@@ -16,7 +16,7 @@ object Camera extends VideoPrimitiveManager {
 
   override def unload() {
     super.unload()
-    cameraPipeline.setState(State.NULL) // GStreamer crashes and warns you about this if you don't do it; needed for element cleanup
+    cameraPipeline.stop() // GStreamer crashes and warns you about this if you don't do it; needed for element cleanup
     cameraPipeline.dispose()
     recorderOpt foreach (_.dispose())
   }
@@ -48,14 +48,14 @@ object Camera extends VideoPrimitiveManager {
   object StartCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      cameraPipeline.setState(State.PLAYING)
+      cameraPipeline.play()
     }
   }
 
   object StopCamera extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      cameraPipeline.setState(State.NULL)
+      cameraPipeline.stop()
     }
   }
   object StartRecording extends VideoCommand {
