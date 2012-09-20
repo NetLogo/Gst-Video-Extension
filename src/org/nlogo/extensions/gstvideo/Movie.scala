@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import javax.swing.JFrame
 
 import org.gstreamer.{ Bin, Buffer, Bus, Caps, ClockTime, Element, elements, ElementFactory, GhostPad }, elements.PlayBin2
-import org.gstreamer.{ GstObject, Pad, State, swing }, swing.VideoComponent
+import org.gstreamer.{ GstObject, Pad, swing }, swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
@@ -26,7 +26,7 @@ object Movie extends VideoPrimitiveManager {
   }
 
   override protected def generateBuffer : Buffer = {
-    val buff = if (player.getState == State.PLAYING) appSink.pullBuffer() else appSink.pullPreroll()
+    val buff = if (player.isPlaying) appSink.pullBuffer() else appSink.pullPreroll()
     Option(buff) orElse lastBufferOpt getOrElse (throw new ExtensionException("No buffer available to pull!"))
   }
 

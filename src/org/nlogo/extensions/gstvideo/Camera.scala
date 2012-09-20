@@ -1,7 +1,7 @@
 package org.nlogo.extensions.gstvideo
 
 import java.io.File
-import org.gstreamer.{ Buffer, Caps, Element, ElementFactory, Pipeline, State }
+import org.gstreamer.{ Buffer, Caps, Element, ElementFactory, Pipeline }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 // The code here used to look like the code from Andres Colubri's GSVideo.  Not anymore. --JAB (9/18/12)
@@ -58,6 +58,7 @@ object Camera extends VideoPrimitiveManager {
       cameraPipeline.stop()
     }
   }
+
   object StartRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType))
     override def perform(args: Array[Argument], context: Context) {
@@ -88,7 +89,7 @@ object Camera extends VideoPrimitiveManager {
   object IsRolling extends VideoReporter {
     override def getSyntax = Syntax.reporterSyntax(Syntax.BooleanType)
     override def report(args: Array[Argument], context: Context) : AnyRef = {
-      Boolean.box(cameraPipeline.getState == State.PLAYING)
+      Boolean.box(cameraPipeline.isPlaying)
     }
   }
 
