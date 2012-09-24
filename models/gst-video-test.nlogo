@@ -558,7 +558,7 @@ BUTTON
 113
 602
 start recording
-gst-video:camera-start-recording rec-filename
+gst-video:camera-start-recording (word rec-filename \".\" recording-extension)
 NIL
 1
 T
@@ -592,10 +592,20 @@ INPUTBOX
 186
 666
 rec-filename
-webcam_recording.ogg
+webcam_recording
 1
 0
 String
+
+CHOOSER
+197
+619
+351
+664
+recording-extension
+recording-extension
+"ogg" "mkv"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
