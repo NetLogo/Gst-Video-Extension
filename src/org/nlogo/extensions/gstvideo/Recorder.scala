@@ -11,34 +11,35 @@ import org.gstreamer.{ Buffer, elements }, elements.RGBDataFileSink
  */
 
 // A wrapper around a recording sink
-class Recorder(name: String, width: Int, height: Int, fps: Int, encoderStr: String,
-               encoderPropNames: Array[String], encoderPropData: Array[AnyRef],
-               muxerStr: String, file: File) {
+class Recorder {
 
-  private var isRecording = false
-  private val sink        = new RGBDataFileSink("Recorder", width, height, fps, encoderStr,
-                                                encoderPropNames, encoderPropData, muxerStr, file)
-
-  sink.setPreQueueSize(0)
-  sink.setSrcQueueSize(60)
+  private var isRecording                      = false
+  private var sinkOpt: Option[RGBDataFileSink] = None
 
   def dispose() {
-    sink.dispose()
+    sinkOpt foreach (_.dispose())
   }
 
   def push(buffer: Buffer) {
-    if (isRecording) sink.pushRGBFrame(buffer)
+    if (isRecording) sinkOpt foreach (_.pushRGBFrame(buffer))
     else             buffer.dispose()
   }
 
   def start() {
-    sink.start()
-    isRecording = true
+    sinkOpt foreach { sink => sink.start(); isRecording = true }
   }
 
   def stop() {
-    sink.stop()
-    isRecording = false
+    sinkOpt foreach { sink => sink.stop(); isRecording = false }
+  }
+
+  def reconstructSink(name: String, width: Int, height: Int, fps: Int,
+                      encoderStr: String, encoderPropNames: Array[String],
+                      encoderPropData: Array[AnyRef], muxerStr: String, file: File) {
+    val sink = new RGBDataFileSink("Recorder", width, height, fps, encoderStr, encoderPropNames, encoderPropData, muxerStr, file)
+    sink.setPreQueueSize(0)
+    sink.setSrcQueueSize(60)
+    sinkOpt = Option(sink)
   }
 
 }

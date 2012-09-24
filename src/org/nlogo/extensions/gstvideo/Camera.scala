@@ -9,16 +9,16 @@ object Camera extends VideoPrimitiveManager {
 
   private lazy val cameraPipeline = initPipeline()
 
-  private var recorderOpt: Option[Recorder] = None
+  private val recorder = new Recorder
 
   override protected def generateBuffer                    = appSink.pullBuffer
-  override protected def handleImageBuffer(buffer: Buffer) { recorderOpt foreach (_.push(buffer)) }
+  override protected def handleImageBuffer(buffer: Buffer) { recorder.push(buffer) }
 
   override def unload() {
     super.unload()
     cameraPipeline.stop() // GStreamer crashes and warns you about this if you don't do it; needed for element cleanup
     cameraPipeline.dispose()
-    recorderOpt foreach (_.dispose())
+    recorder.dispose()
   }
 
   private def initPipeline() : Pipeline = {
@@ -74,8 +74,8 @@ object Camera extends VideoPrimitiveManager {
       val (width, height) = determineWorldDimensions(context)
       val muxer           = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
 
-      recorderOpt = Option(new Recorder("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file))
-      recorderOpt foreach (_.start())
+      recorder.reconstructSink("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file)
+      recorder.start()
 
     }
   }
@@ -83,7 +83,7 @@ object Camera extends VideoPrimitiveManager {
   object StopRecording extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      recorderOpt foreach (_.stop())
+      recorder.stop()
     }
   }
 
