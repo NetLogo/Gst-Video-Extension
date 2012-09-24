@@ -9,7 +9,7 @@ object Camera extends VideoPrimitiveManager {
 
   private lazy val cameraPipeline = initPipeline()
 
-  private var recorderOpt: Option[Recorder] = None //@ Is there something I can do about the `var`iness?  Recycling of recorders?
+  private var recorderOpt: Option[Recorder] = None
 
   override protected def generateBuffer                    = appSink.pullBuffer
   override protected def handleImageBuffer(buffer: Buffer) { recorderOpt foreach (_.push(buffer)) }
