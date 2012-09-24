@@ -152,8 +152,8 @@ trait VideoPrimitiveManager {
         val structure       = buffer.getCaps.getStructure(0)
         val (width, height) = (structure.getInteger("width"), structure.getInteger("height"))
 
-        val intBuf          = buffer.getByteBuffer.asIntBuffer
-        val imageData       = new Array[Int](intBuf.capacity)
+        val intBuf    = buffer.getByteBuffer.asIntBuffer
+        val imageData = new Array[Int](intBuf.capacity)
         intBuf.get(imageData, 0, imageData.length)
 
         handleImageBuffer(buffer)
