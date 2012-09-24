@@ -37,7 +37,7 @@ end
 
 to mov-mirror [thunk]
   mov-update-fx
-  run thunk
+  carefully [ run thunk ] []
   ifelse (gst-video:movie-playing?) [
     update-slider
   ] [
