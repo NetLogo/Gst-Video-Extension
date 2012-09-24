@@ -5,7 +5,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.swing.JFrame
 
-import org.gstreamer.{ Bin, Buffer, Bus, Caps, ClockTime, Element, elements, ElementFactory, GhostPad }, elements.PlayBin2
+import org.gstreamer.{ Buffer, Bus, Caps, ClockTime, Element, elements, ElementFactory }, elements.PlayBin2
 import org.gstreamer.{ GstObject, Pad, swing }, swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
@@ -15,14 +15,19 @@ object Movie extends VideoPrimitiveManager {
   private lazy val player      = initPlayer()
   private lazy val playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame")
   private lazy val frameVideo  = new VideoComponent
-  private lazy val sinkBin     = new Bin
+  private lazy val sizeFilter  = generateVideoFilter
+  private lazy val binManager  = new SinkBinManager(List(scale, sizeFilter, balance, generateColorspaceConverter, ElementFactory.make("videorate", "rate"), appSink))
 
+  // These `var`s smell like onions... --JAB
   private var lastBufferOpt: Option[Buffer] = None
-  private var isLooping                     = false //@ Surely, there's some way to encapsulate this away somewhere
+  private var isLooping                     = false
+
+  // These caps are necessary to get video hue flipped
+  appSink.setCaps(new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255"))
 
   override def unload() {
     player.stop()
-    sinkBin.dispose()
+    binManager.dispose()
   }
 
   override protected def generateBuffer : Buffer = {
@@ -60,7 +65,6 @@ object Movie extends VideoPrimitiveManager {
         }
       }
 
-      sinkBin.connect(padAddedElem)
       playbin.connect(padAddedElem)
 
     })
@@ -69,35 +73,35 @@ object Movie extends VideoPrimitiveManager {
 
   }
 
+  /*
+  Right now, this is only done on movie LOAD, because it's seeming difficult/impossible to do on buffer pull
+  Doing it while the movie is playing seems to break things entirely (doesn't resize & frames stop getting pulled)
+  Pausing the movie has erratic, crash-causing behavior
+  Doing it after stopping/readying the movie resets the seek bar, and seeking back to the old position doesn't won't work as expected
+  Likely linked to the issues with `SinkBinManager`'s `dummyCallback`s, but... good luck with that
+  Other ideas welcome. --JAB (9/24/12)
+  */
+  private def setBufferSize(width: Int, height: Int) {
+    val capsString = "video/x-raw-rgb, width=%d, height=%d".format(width, height)
+    val newItem    = generateVideoFilter
+    newItem.setCaps(Caps.fromString(capsString))
+    try binManager.replaceElementByName(sizeFilter.getName, newItem)
+    catch {
+      case e: IndexOutOfBoundsException => throw new ExtensionException(e.getMessage, e)
+    }
+  }
+
   object OpenMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType))
     override def perform(args: Array[Argument], context: Context) {
 
       val (width, height) = determineWorldDimensions(context)
-      val filename =
-        try context.attachCurrentDirectory(args(0).getString)
-        catch {
-          case e: IOException => throw new ExtensionException(e.getMessage)
-        }
+      setBufferSize(width.toInt, height.toInt)
 
-      val colorConverter = generateColorspaceConverter
-      val sizeFilter     = generateVideoFilter
-      val rate           = ElementFactory.make("videorate", "rate")
-      val capsString     = "video/x-raw-rgb, width=%d, height=%d".format(width.toInt, height.toInt)
-      sizeFilter.setCaps(Caps.fromString(capsString))
-
-      val elements = List(scale, sizeFilter, balance, colorConverter, rate, appSink)
-      sinkBin.addMany(elements: _*)
-      Element.linkMany(elements: _*)
-
-      sinkBin.addPad(new GhostPad("sink", elements.head.getSinkPads.get(0)))
-
-      // Snippet inspired by http://opencast.jira.com/svn/MH/trunk/modules/matterhorn-composer-gstreamer/src/main/java/org/opencastproject/composer/gstreamer/engine/GStreamerEncoderEngine.java
-      // These caps are necessary to get video hue flipped
-      val sinkCaps = new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255")
-      appSink.setCaps(sinkCaps)
-
-      player.set("uri", "file://" + filename)
+      try player.set("uri", "file://" + context.attachCurrentDirectory(args(0).getString))
+      catch {
+        case e: IOException => throw new ExtensionException(e.getMessage, e)
+      }
 
     }
   }
@@ -105,7 +109,7 @@ object Movie extends VideoPrimitiveManager {
   object StartMovie extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      setVideoSink(sinkBin)
+      setVideoSink(binManager.sinkBin)
       player.play()
     }
   }
