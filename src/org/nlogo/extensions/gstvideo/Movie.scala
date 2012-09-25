@@ -54,7 +54,7 @@ object Movie extends VideoPrimitiveManager {
     playbin.getBus.connect(new Bus.EOS {
       override def endOfStream(source: GstObject) {
         if (isLooping) playbin.seek(ClockTime.fromSeconds(0))
-        else           playbin.ready()
+        else           playbin.pause()
       }
     })
 
@@ -164,15 +164,22 @@ object Movie extends VideoPrimitiveManager {
   object SetTimeSeconds extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      player.seek(ClockTime.fromSeconds(args(0).getDoubleValue.longValue))
+      seek(ClockTime.fromSeconds(args(0).getDoubleValue.longValue))
     }
   }
 
   object SetTimeMilliseconds extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType))
     override def perform(args: Array[Argument], context: Context) {
-      player.seek(ClockTime.fromMillis(args(0).getDoubleValue.longValue))
+      seek(ClockTime.fromMillis(args(0).getDoubleValue.longValue))
     }
+  }
+
+  // This `seek` method is a "flushing seek", so that seeking can be done in either PLAYING or PAUSED state,
+  // without any worry of a PAUSED-state seek causing a deadlock
+  private def seek(time: ClockTime) {
+    import org.gstreamer.{ Format, SeekFlags, SeekType }
+    player.seek(1.0, Format.TIME, SeekFlags.FLUSH, SeekType.SET, time.getNanoSeconds, SeekType.NONE, ClockTime.NONE.getNanoSeconds)
   }
 
   object CurrentTimeSeconds extends VideoReporter {
