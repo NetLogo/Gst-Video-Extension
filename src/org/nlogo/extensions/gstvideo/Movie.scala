@@ -99,7 +99,14 @@ object Movie extends VideoPrimitiveManager {
       val (width, height) = determineWorldDimensions(context)
       setBufferSize(width.toInt, height.toInt)
 
-      try player.set("uri", "file://" + context.attachCurrentDirectory(args(0).getString))
+      try {
+        import java.io.{ File, FileNotFoundException }
+        val filePath = context.attachCurrentDirectory(args(0).getString)
+        if (new File(filePath).exists())
+          player.set("uri", "file://" + filePath)
+        else
+          throw new FileNotFoundException("Could not find file: " + filePath)
+      }
       catch {
         case e: IOException => throw new ExtensionException(e.getMessage, e)
       }
