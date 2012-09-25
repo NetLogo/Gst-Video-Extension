@@ -13,6 +13,15 @@ import org.nlogo.api.{ Argument, Context, DefaultReporter, ExtensionException, S
 
 trait VideoPrimitiveManager {
 
+  /*
+  I had explored the possibility of moving these shared elements and their prims into a separate object entirely
+  (i.e. so that there wouldn't be separate prims for both `movie-set-balance` and `camera-set-balance`), but my excursion
+  showed me only that such a thing is an impracticality.  The crux of the problem is that an element can only have one
+  one owner/parent at a time.  As such, a single element would need to remove itself from its parent whenever being added
+  somewhere else, and also unlink itself from its neighbor elements--and make sure that that _always_ happens when it gets
+  added somewhere.  In the end, I couldn't think of a way of doing it that wasn't unwieldy or architecturally nonsensical.
+  As such, I've opted to stick with the existing sufficiently-good badism.  --JAB (9/25/12)
+   */
   protected lazy val appSink = initSink()
   protected lazy val balance = ElementFactory.make("videobalance", "balance")
   protected lazy val scale   = ElementFactory.make("videoscale",   "scale")
