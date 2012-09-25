@@ -20,8 +20,9 @@ object Movie extends VideoPrimitiveManager {
                                                          ElementFactory.make("videorate", "rate"), appSink))
 
   // These `var`s smell like onions... --JAB
-  private var lastBufferOpt: Option[Buffer] = None
-  private var isLooping                     = false
+  private var lastBufferOpt: Option[Buffer]  = None
+  private var isLooping                      = false
+  private var videoSinkOpt:  Option[Element] = None
 
   // These caps are necessary to get video hue flipped
   appSink.setCaps(new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255"))
@@ -86,7 +87,10 @@ object Movie extends VideoPrimitiveManager {
     val capsString = "video/x-raw-rgb, width=%d, height=%d".format(width, height)
     val newItem    = generateVideoFilter
     newItem.setCaps(Caps.fromString(capsString))
-    try binManager.replaceElementByName(sizeFilter.getName, newItem)
+    try {
+      player.stop() // Trying to replace an element in an unstopped pipeline is a Very Bad Idea(tm)
+      binManager.replaceElementByName(sizeFilter.getName, newItem)
+    }
     catch {
       case e: IndexOutOfBoundsException => throw new ExtensionException(e.getMessage, e)
     }
@@ -151,9 +155,14 @@ object Movie extends VideoPrimitiveManager {
   }
 
   // A necessary semi-hack for swapping in new video sinks on the fly
+  // We avoid this code when we are already using the same sink, so as to avoid NULLing the player's state
+  // (which would effectively prevent the resuming of paused video streams)
   private def setVideoSink(sink: Element) {
-    player.stop()
-    player.setVideoSink(sink)
+    if (!(videoSinkOpt exists (_ eq sink))) {
+      player.stop()
+      player.setVideoSink(sink)
+      videoSinkOpt = Option(sink)
+    }
   }
 
   object IsPlaying extends VideoReporter {
