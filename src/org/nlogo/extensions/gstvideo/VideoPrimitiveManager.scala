@@ -98,22 +98,22 @@ trait VideoPrimitiveManager {
   def generateColorspaceConverter : Element = ElementFactory.make("ffmpegcolorspace", "colorspace-converter")
   def generateVideoFilter         : Element = ElementFactory.make("capsfilter",       "video-filter")
 
-  object StartFullscreen extends VideoCommand {
+  object KeepAspect extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      setFullscreen(true)
+      setKeepAspect(true)
     }
   }
 
-  object StopFullscreen extends VideoCommand {
+  object IgnoreAspect extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
     override def perform(args: Array[Argument], context: Context) {
-      setFullscreen(false)
+      setKeepAspect(false)
     }
   }
 
-  protected def setFullscreen(isStretching: Boolean) {
-    scale.set("add-borders", !isStretching)
+  protected def setKeepAspect(isKeeping: Boolean) {
+    scale.set("add-borders", isKeeping)
   }
 
   object SetContrast extends VideoCommand {

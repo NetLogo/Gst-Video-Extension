@@ -41,8 +41,8 @@ object Movie extends VideoPrimitiveManager {
     lastBufferOpt = Option(buffer)
   }
 
-  override protected def setFullscreen(isStretching: Boolean) {
-    super.setFullscreen(isStretching)
+  override protected def setKeepAspect(isStretching: Boolean) {
+    super.setKeepAspect(isStretching)
     frameVideo.setKeepAspect(!isStretching)
   }
 

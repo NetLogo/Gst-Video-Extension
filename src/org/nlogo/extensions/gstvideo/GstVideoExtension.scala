@@ -23,8 +23,8 @@ class GstVideoExtension extends DefaultClassManager {
     primitiveManager.addPrimitive("camera-set-saturation",      Camera.SetSaturation)
     primitiveManager.addPrimitive("camera-set-brightness",      Camera.SetBrightness)
     primitiveManager.addPrimitive("camera-set-contrast",        Camera.SetContrast)
-    primitiveManager.addPrimitive("camera-start-fullscreen",    Camera.StartFullscreen)
-    primitiveManager.addPrimitive("camera-stop-fullscreen",     Camera.StopFullscreen)
+    primitiveManager.addPrimitive("camera-keep-aspect-ratio",   Camera.KeepAspect)
+    primitiveManager.addPrimitive("camera-ignore-aspect-ratio", Camera.IgnoreAspect)
     primitiveManager.addPrimitive("movie-open",                 Movie.OpenMovie)
     primitiveManager.addPrimitive("movie-start",                Movie.StartMovie)
     primitiveManager.addPrimitive("movie-stop",                 Movie.StopMovie)
@@ -44,8 +44,8 @@ class GstVideoExtension extends DefaultClassManager {
     primitiveManager.addPrimitive("movie-set-contrast",         Movie.SetContrast)
     primitiveManager.addPrimitive("movie-start-looping",        Movie.StartLooping)
     primitiveManager.addPrimitive("movie-stop-looping",         Movie.StopLooping)
-    primitiveManager.addPrimitive("movie-start-fullscreen",     Movie.StartFullscreen)
-    primitiveManager.addPrimitive("movie-stop-fullscreen",      Movie.StopFullscreen)
+    primitiveManager.addPrimitive("movie-keep-aspect-ratio",    Movie.KeepAspect)
+    primitiveManager.addPrimitive("movie-ignore-aspect-ratio",  Movie.IgnoreAspect)
   }
 
   override def unload(em: ExtensionManager) {

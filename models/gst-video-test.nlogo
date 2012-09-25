@@ -103,7 +103,7 @@ to random-fx
 end
 
 to cam-update-fx
-  if-else (is-fullscreen?) [ gst-video:camera-start-fullscreen ] [ gst-video:camera-stop-fullscreen ]
+  if-else (is-keeping-aspect-ratio?) [ gst-video:camera-keep-aspect-ratio ] [ gst-video:camera-ignore-aspect-ratio ]
   gst-video:camera-set-contrast contrast
   gst-video:camera-set-brightness brightness
   gst-video:camera-set-hue hue
@@ -112,7 +112,7 @@ end
 
 to mov-update-fx
   if-else (is-looping?) [ gst-video:movie-start-looping ] [ gst-video:movie-stop-looping ]
-  if-else (is-fullscreen?) [ gst-video:movie-start-fullscreen ] [ gst-video:movie-stop-fullscreen ]
+  if-else (is-keeping-aspect-ratio?) [ gst-video:movie-keep-aspect-ratio ] [ gst-video:movie-ignore-aspect-ratio ]
   gst-video:movie-set-contrast contrast
   gst-video:movie-set-brightness brightness
   gst-video:movie-set-hue hue
@@ -335,11 +335,11 @@ HORIZONTAL
 SWITCH
 941
 325
-1140
+1143
 358
-is-fullscreen?
-is-fullscreen?
-0
+is-keeping-aspect-ratio?
+is-keeping-aspect-ratio?
+1
 1
 -1000
 
