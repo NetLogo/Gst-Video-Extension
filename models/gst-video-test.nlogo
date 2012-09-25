@@ -19,8 +19,8 @@ end
 
 to seek-to-current-pos
   if (current-pos != seek-pos) [
-    let new-pos (seek-pos / 100) * gst-video:movie-duration-millisecs
-    gst-video:movie-set-time-millisecs new-pos
+    let new-pos (seek-pos / 100) * gst-video:movie-get-length-ms
+    gst-video:movie-set-time-ms new-pos
     set current-pos seek-pos
   ]
 end
@@ -47,8 +47,8 @@ to mov-mirror [thunk]
 end
 
 to update-slider
-  let current-time gst-video:movie-time-millisecs
-  let duration gst-video:movie-duration-millisecs
+  let current-time gst-video:movie-get-time-ms
+  let duration gst-video:movie-get-length-ms
   let completed-percent (current-time / duration)
   set completed-percent completed-percent * 100
   set seek-pos (round completed-percent)
