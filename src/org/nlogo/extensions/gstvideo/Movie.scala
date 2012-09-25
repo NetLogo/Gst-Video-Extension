@@ -16,7 +16,8 @@ object Movie extends VideoPrimitiveManager {
   private lazy val playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame")
   private lazy val frameVideo  = new VideoComponent
   private lazy val sizeFilter  = generateVideoFilter
-  private lazy val binManager  = new SinkBinManager(List(scale, sizeFilter, balance, generateColorspaceConverter, ElementFactory.make("videorate", "rate"), appSink))
+  private lazy val binManager  = new SinkBinManager(List(scale, sizeFilter, balance, generateColorspaceConverter,
+                                                         ElementFactory.make("videorate", "rate"), appSink))
 
   // These `var`s smell like onions... --JAB
   private var lastBufferOpt: Option[Buffer] = None
