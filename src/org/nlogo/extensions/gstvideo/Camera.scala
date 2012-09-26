@@ -61,7 +61,7 @@ object Camera extends VideoPrimitiveManager {
   }
 
   object StartRecording extends VideoCommand {
-    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.StringType))
+    override def getSyntax = Syntax.commandSyntax(Array[Int](Syntax.NumberType, Syntax.NumberType, Syntax.StringType))
     override def perform(args: Array[Argument], context: Context) {
 
       import Codec.Theora, Quality.Medium
@@ -69,12 +69,12 @@ object Camera extends VideoPrimitiveManager {
       val (propNames, propValues, encoder) = codec.getProps
 
       val fps             = 30
-      val filename        = args(0).getString
+      val (width, height) = (args(0).getIntValue, args(1).getIntValue)
+      val filename        =  args(2).getString
       val file            = new File(filename)
-      val (width, height) = determineWorldDimensions(context)
       val muxer           = Util.determineMuxer(filename) getOrElse (throw new ExtensionException("Unrecognized video container"))
 
-      recorder.reconstructSink("Recorder", width.toInt, height.toInt, fps, encoder, propNames, propValues, muxer, file)
+      recorder.reconstructSink("Recorder", width, height, fps, encoder, propNames, propValues, muxer, file)
       recorder.start()
 
     }

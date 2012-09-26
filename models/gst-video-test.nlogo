@@ -558,7 +558,7 @@ BUTTON
 113
 602
 start recording
-gst-video:camera-start-recording (word rec-filename \".\" recording-extension)
+gst-video:camera-start-recording 1280 960 (word rec-filename \".\" recording-extension)
 NIL
 1
 T
