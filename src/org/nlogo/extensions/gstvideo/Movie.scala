@@ -5,7 +5,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.swing.JFrame
 
-import org.gstreamer.{ Buffer, Bus, Caps, ClockTime, Element, elements, ElementFactory }, elements.PlayBin2
+import org.gstreamer.{ Buffer, Bus, Caps, ClockTime, Element, elements }, elements.PlayBin2
 import org.gstreamer.{ GstObject, Pad, swing }, swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
@@ -15,9 +15,9 @@ object Movie extends VideoPrimitiveManager {
   private lazy val player      = initPlayer()
   private lazy val playerFrame = new JFrame("NetLogo: GstVideo Extension - External Video Frame")
   private lazy val frameVideo  = new VideoComponent
-  private lazy val sizeFilter  = generateVideoFilter
-  private lazy val binManager  = new SinkBinManager(List(scale, sizeFilter, balance, generateColorspaceConverter,
-                                                         ElementFactory.make("videorate", "rate"), appSink))
+  private lazy val sizeFilter  = ElementManager.generateSizeFilter(1, 1) // Height/width gets overwritten right away, but can't be < 1
+  private lazy val binManager  = new SinkBinManager(List(scale, sizeFilter, balance, ElementManager.generateColorspaceConverter,
+                                                         ElementManager.generateVideoRate, appSink))
 
   // These `var`s smell like onions... --JAB
   private var lastBufferOpt: Option[Buffer]  = None
@@ -49,7 +49,7 @@ object Movie extends VideoPrimitiveManager {
 
   private def initPlayer() : PlayBin2 = {
 
-    val playbin = new PlayBin2("player")
+    val playbin = ElementManager.generatePlayBin("playbin")
 
     // It actually kind of makes sense to have this bus listener here
     playbin.getBus.connect(new Bus.EOS {
@@ -84,12 +84,9 @@ object Movie extends VideoPrimitiveManager {
   Other ideas welcome. --JAB (9/24/12)
   */
   private def setBufferSize(width: Int, height: Int) {
-    val capsString = "video/x-raw-rgb, width=%d, height=%d".format(width, height)
-    val newItem    = generateVideoFilter
-    newItem.setCaps(Caps.fromString(capsString))
     try {
       player.stop() // Trying to replace an element in an unstopped pipeline is a Very Bad Idea(tm)
-      binManager.replaceElementByName(sizeFilter.getName, newItem)
+      binManager.replaceElementByName(sizeFilter.getName, ElementManager.generateSizeFilter(width, height))
     }
     catch {
       case e: IndexOutOfBoundsException => throw new ExtensionException(e.getMessage, e)

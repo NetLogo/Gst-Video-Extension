@@ -1,7 +1,7 @@
 package org.nlogo.extensions.gstvideo
 
 import java.io.File
-import org.gstreamer.{ Buffer, Caps, Element, ElementFactory, Pipeline }
+import org.gstreamer.{ Buffer, Caps, Element, Pipeline }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
 
 // The code here used to look like the code from Andres Colubri's GSVideo.  Not anymore. --JAB (9/18/12)
@@ -32,9 +32,9 @@ object Camera extends VideoPrimitiveManager {
     override def perform(args: Array[Argument], context: Context) {
 
       val (width, height) = determineWorldDimensions(context)
-      val webcamSource   = ElementFactory.make("qtkitvideosrc", "capture")
-      val colorConverter = generateColorspaceConverter
-      val videoFilter    = generateVideoFilter
+      val webcamSource    = ElementManager.generateWebcamSource
+      val colorConverter  = ElementManager.generateColorspaceConverter
+      val videoFilter     = ElementManager.generateVideoFilter
 
       videoFilter.setCaps(Caps.fromString("video/x-raw-rgb, endianness=4321, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216"))
       appSink.setCaps(Caps.fromString("video/x-raw-rgb, width=%d, height=%d, bpp=32, depth=24, pixel-aspect-ratio=480/640".format(width.toInt, height.toInt)))

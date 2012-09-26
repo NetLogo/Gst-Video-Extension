@@ -1,7 +1,7 @@
 package org.nlogo.extensions.gstvideo
 
 import java.awt.image.{ BufferedImage, DataBufferInt, DirectColorModel, Raster, SampleModel, WritableRaster }
-import org.gstreamer.{ Buffer, Bus, Element, ElementFactory, elements, GstObject, State, TagList }, elements.AppSink
+import org.gstreamer.{ Buffer, Bus, Element, elements, GstObject, State, TagList }, elements.AppSink
 import org.nlogo.api.{ Argument, Context, DefaultReporter, ExtensionException, Syntax}
 
 /**
@@ -23,8 +23,8 @@ trait VideoPrimitiveManager {
   As such, I've opted to stick with the existing sufficiently-good badism.  --JAB (9/25/12)
    */
   protected lazy val appSink = initSink()
-  protected lazy val balance = ElementFactory.make("videobalance", "balance")
-  protected lazy val scale   = ElementFactory.make("videoscale",   "scale")
+  protected lazy val balance = ElementManager.generateBalancer
+  protected lazy val scale   = ElementManager.generateScaler
 
   private val isDebugging = false
 
@@ -78,10 +78,7 @@ trait VideoPrimitiveManager {
   }
 
   protected def initSink() : AppSink = {
-    val sink = ElementFactory.make("appsink", "sink") match {
-      case appSink: AppSink => appSink
-      case other            => throw new ExtensionException("Invalid sink type created: class == " + other.getClass.getName)
-    }
+    val sink = ElementManager.generateAppSink
     sink.set("max-buffers", 1)
     sink.set("drop", true)
     sink
@@ -94,9 +91,6 @@ trait VideoPrimitiveManager {
     val height    = world.worldHeight * patchSize
     (width, height)
   }
-
-  def generateColorspaceConverter : Element = ElementFactory.make("ffmpegcolorspace", "colorspace-converter")
-  def generateVideoFilter         : Element = ElementFactory.make("capsfilter",       "video-filter")
 
   object KeepAspect extends VideoCommand {
     override def getSyntax = Syntax.commandSyntax(Array[Int]())
