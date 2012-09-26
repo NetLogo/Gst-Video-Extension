@@ -28,6 +28,7 @@ class Recorder {
     val sink = new RGBDataFileSink("Recorder", width, height, fps, encoderStr, encoderPropNames, encoderPropData, muxerStr, file)
     sink.setPreQueueSize(0)
     sink.setSrcQueueSize(60)
+    sinkOpt foreach (_.dispose())
     sinkOpt = Option(new RecorderSink(sink, width, height))
   }
 
