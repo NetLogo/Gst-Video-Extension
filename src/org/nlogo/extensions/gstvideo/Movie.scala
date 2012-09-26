@@ -21,8 +21,8 @@ object Movie extends VideoPrimitiveManager {
 
   // These `var`s smell like onions... --JAB
   private var lastBufferOpt: Option[Buffer]  = None
-  private var isLooping                      = false
   private var videoSinkOpt:  Option[Element] = None
+  private var isLooping                      = false
 
   // These caps are necessary to get video hue flipped
   appSink.setCaps(new Caps("video/x-raw-rgb, bpp=32, depth=24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255"))
