@@ -1,14 +1,14 @@
-package org.nlogo.extensions.gstvideo
+package org.nlogo.extensions.gstvideo.prim
 
 import java.awt.{ BorderLayout, Dimension }
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.swing.JFrame
 
-import org.gstreamer.{ Buffer, Bus, Caps, ClockTime, Element, elements }, elements.PlayBin2
-import org.gstreamer.{ GstObject, Pad, swing }, swing.VideoComponent
+import org.gstreamer.{ Buffer, Bus, Caps, ClockTime, Element, elements, GstObject, Pad, swing }, elements.PlayBin2, swing.VideoComponent
 
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
+import model.{ ElementManager, OS, SinkBinManager }
 
 object Movie extends VideoPrimitiveManager {
 

@@ -1,4 +1,4 @@
-package org.nlogo.extensions.gstvideo
+package org.nlogo.extensions.gstvideo.prim
 
 import org.nlogo.api.{ DefaultCommand, DefaultReporter, Primitive }
 

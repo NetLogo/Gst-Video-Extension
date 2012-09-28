@@ -1,9 +1,7 @@
-package org.nlogo.extensions.gstvideo
+package org.nlogo.extensions.gstvideo.prim.model
 
 import java.io.File
-
-import org.gstreamer.{ Bin, Buffer, Element, elements }
-import elements.RGBDataFileSink
+import org.gstreamer.{ Bin, Buffer, Element, elements }, elements.RGBDataFileSink
 
 /**
  * Created with IntelliJ IDEA.

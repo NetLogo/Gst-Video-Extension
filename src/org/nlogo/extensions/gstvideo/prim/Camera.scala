@@ -1,8 +1,9 @@
-package org.nlogo.extensions.gstvideo
+package org.nlogo.extensions.gstvideo.prim
 
 import java.io.File
 import org.gstreamer.{ Buffer, Caps, Element, Pipeline }
 import org.nlogo.api.{ Argument, Context, ExtensionException, Syntax }
+import model.{ Codec, ElementManager, Quality, Recorder }
 
 // The code here used to look like the code from Andres Colubri's GSVideo.  Not anymore. --JAB (9/18/12)
 object Camera extends VideoPrimitiveManager {

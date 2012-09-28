@@ -1,8 +1,9 @@
-package org.nlogo.extensions.gstvideo
+package org.nlogo.extensions.gstvideo.prim
 
 import java.awt.image.{ BufferedImage, DataBufferInt, DirectColorModel, Raster, SampleModel, WritableRaster }
 import org.gstreamer.{ Buffer, Bus, Element, elements, GstObject, State, TagList }, elements.AppSink
 import org.nlogo.api.{ Argument, Context, DefaultReporter, ExtensionException, Syntax}
+import model.ElementManager
 
 /**
  * Created with IntelliJ IDEA.

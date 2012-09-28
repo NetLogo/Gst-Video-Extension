@@ -1,8 +1,9 @@
 package org.nlogo.extensions.gstvideo
 
 import java.util.ArrayList
-import org.nlogo.api.{ DefaultClassManager, ExtensionManager, PrimitiveManager }
 import processing.video.Video
+import org.nlogo.api.{ DefaultClassManager, ExtensionManager, PrimitiveManager }
+import prim.{ Camera, Movie }
 
 class GstVideoExtension extends DefaultClassManager {
 

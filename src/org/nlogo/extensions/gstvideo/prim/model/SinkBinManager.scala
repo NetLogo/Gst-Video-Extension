@@ -1,4 +1,4 @@
-package org.nlogo.extensions.gstvideo
+package org.nlogo.extensions.gstvideo.prim.model
 
 import collection.mutable.MutableList
 import org.gstreamer.{ Bin, Element, GhostPad, Pad }
