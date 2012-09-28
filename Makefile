@@ -58,13 +58,18 @@ LIB_FILE=$(LIB_TYPE).tar
 
 JAR_REPO=http://ccl.northwestern.edu/devel/
 
-PROCESSING_SRCS=$(shell find src/processing/video -type f -name '*.java')
-SRCS=$(shell find src/org/nlogo/extensions/gstvideo -type f -name '*.scala')
+PROCESSING_NAME=processing-lib
+PROCESSING_JAR=$(PROCESSING_NAME).jar
+PROCESSING_PACK=$(PROCESSING_JAR).pack.gz
+PROCESSING_DIR=processing-lib
+PROCESSING_CLASSES=$(PROCESSING_DIR)/classes
+PROCESSING_SRCS=$(shell find $(PROCESSING_DIR)/src -type f -name '*.java')
 
-$(JAR_NAME).jar $(PACK_NAME): $(SRCS) $(GST_JAR) $(GST_PACK) $(JNA_JAR) $(JNA_PACK) $(LIB_DIR)$(LIB_TYPE) manifest.txt
+SRCS=$(shell find src -type f -name '*.scala')
+
+$(JAR_NAME).jar $(PACK_NAME): $(SRCS) $(GST_JAR) $(GST_PACK) $(JNA_JAR) $(JNA_PACK) $(PROCESSING_JAR) $(PROCESSING_PACK) $(LIB_DIR)$(LIB_TYPE) manifest.txt
 	mkdir -p classes
-	$(JAVA_HOME)/bin/javac -g -encoding us-ascii -source 1.5 -target 1.5 -classpath $(GST_JAR)$(COLON)$(JNA_JAR) -d classes $(PROCESSING_SRCS)
-	$(SCALA_HOME)/bin/scalac -deprecation -unchecked -encoding us-ascii -classpath $(NETLOGO)/NetLogoLite.jar$(COLON)$(GST_JAR)$(COLON)$(JNA_JAR)$(COLON)classes -d classes $(SRCS)
+	$(SCALA_HOME)/bin/scalac -deprecation -unchecked -encoding us-ascii -classpath $(NETLOGO)/NetLogoLite.jar$(COLON)$(GST_JAR)$(COLON)$(JNA_JAR)$(COLON)$(PROCESSING_JAR)$(COLON)classes -d classes $(SRCS)
 	jar cmf manifest.txt $(JAR_NAME) -C classes .
 	pack200 --modification-time=latest --effort=9 --strip-debug --no-keep-file-order --unknown-attribute=strip $(PACK_NAME) $(JAR_NAME)
 
@@ -85,6 +90,12 @@ $(GST_JAR) $(GST_PACK):
 $(JNA_JAR) $(JNA_PACK):
 	curl -f -s -S $(JAR_REPO)$(JNA_JAR) -o $(JNA_JAR)
 	pack200 --modification-time=latest --effort=9 --strip-debug --no-keep-file-order --unknown-attribute=strip $(JNA_PACK) $(JNA_JAR)
+
+$(PROCESSING_JAR) $(PROCESSING_PACK):
+	mkdir -p $(PROCESSING_CLASSES)
+	$(JAVA_HOME)/bin/javac -g -encoding us-ascii -source 1.5 -target 1.5 -classpath $(GST_JAR)$(COLON)$(JNA_JAR) -d $(PROCESSING_CLASSES) $(PROCESSING_SRCS)
+	jar cf $(PROCESSING_JAR) -C $(PROCESSING_CLASSES) .
+	pack200 --modification-time=latest --effort=9 --strip-debug --no-keep-file-order --unknown-attribute=strip $(PROCESSING_PACK) $(PROCESSING_JAR)
 
 $(EXT_NAME).zip: $(JAR_NAME)
 	rm -rf $(EXT_NAME)
