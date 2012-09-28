@@ -6,3 +6,4 @@
 /video
 *.jar.pack*
 .DS_Store
+*.swp
