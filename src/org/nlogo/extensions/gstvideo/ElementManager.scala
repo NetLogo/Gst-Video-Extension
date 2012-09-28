@@ -24,7 +24,7 @@ object ElementManager {
   def generateScaler               = generate[BaseTransform]("videoscale",       "scale")
   def generateVideoFilter          = generate[BaseTransform]("capsfilter",       "video-filter")
   def generateVideoRate            = generate[Element]      ("videorate",        "video-rate")
-  def generateWebcamSource         = generate[BaseSrc]      ("qtkitvideosrc",    "capture")
+  def generateWebcamSource         = generate[BaseSrc]      (Webcam.pluginName,  "capture")
 
   def generatePlayBin(name: String) = new PlayBin2(name)
 
