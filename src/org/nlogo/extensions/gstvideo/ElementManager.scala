@@ -34,6 +34,12 @@ object ElementManager {
     sizeFilter
   }
 
+  def generateRateFilter(fps: Int) : BaseTransform = {
+    val rateFilter = generate[BaseTransform]("capsfilter", "rate-filter")
+    rateFilter.setCaps(new Caps("video/x-raw-rgb, framerate=%d/1".format(fps)))
+    rateFilter
+  }
+
   // Type erasuuuure!!!  Thou hast smitest me yet again, this fine September eve!
   // Willest thou ne'er cease to shun thine own from attaining code as holy as he who sittest on high?
   // WILLEST THOU?!  --JAB
