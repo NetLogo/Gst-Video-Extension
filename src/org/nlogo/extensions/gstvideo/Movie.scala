@@ -104,7 +104,7 @@ object Movie extends VideoPrimitiveManager {
         import java.io.{ File, FileNotFoundException }
         val filePath = context.attachCurrentDirectory(args(0).getString)
         if (new File(filePath).exists())
-          player.set("uri", "file://" + filePath)
+          player.set("uri", OS.id.fileProtocol + filePath)
         else
           throw new FileNotFoundException("Could not find file: " + filePath)
       }
