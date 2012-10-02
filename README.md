@@ -1,8 +1,20 @@
 #Project information:
-	This project is an alternative video extension for NetLogo.  It utilizes the open source video processing framework GStreamer.
-	
-#Planned video file support (subject to change)
-avi, wmv, mp4, mp4v, mpg, mpg2, mov, movie, flv, rm(?), qt(?), og[mvx], mkv, divx, bin
+This project is an alternative video extension for NetLogo.  It utilizes the open source video-processing framework GStreamer for smooth, cross-platform distribution.
 
-#Version:
-	Beta v. 0.01
+__Version:__ 1.0 beta<br>
+__Supported operating systems:__ Mac OS X (unknown versions), Windows (unknown versions)<br>
+__Supported video formats:__ avi, mp4, mov, flv, ogg<br>
+<b>Unsupported video formats <i>(for now)</i>:</b> wmv, mkv
+
+#Installation:
+* Navigate to the directory of your NetLogo installation's 'extensions' folder
+  * (varies, i.e. `cd /Applications/NetLogo\ 5.0.2/extensions`)
+* Download the source into the 'extensions' folder of an existing NetLogo installation, and ensure that the folder is named "gst-video" 
+  * `git clone https://github.com/NetLogo/Gst-Video-Extension gst-video`
+* Enter the directory for the extension
+  * `cd gst-video`
+* Run the Makefile
+  * `make`
+  * If you are told "make: ../../bin/scalac: No such file or directory", you need to set up your `SCALA_HOME` variable.
+    * If you installed Scala through Homebrew, you can set up this variable by running `export SCALA_HOME=/usr/local/Cellar/scala/<x>/`, where `<x>` is the version number of your Scala installation (likely "2.9.1" or "2.9.2")
+* You should now be all set.  Please feel free to play with the extension by using the 'gst-video-test.nlogo' model file in 'extensions/gst-video/models' folder
