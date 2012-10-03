@@ -6,7 +6,7 @@ __Supported operating systems:__ Mac OS X (unknown versions), Windows (unknown v
 __Supported video formats:__ avi, mp4, mov, flv, ogg<br>
 <b>Unsupported video formats <i>(for now)</i>:</b> wmv, mkv
 
-#Installation Downloadable Zip File
+#Installation From Downloadable Zip File
 * Download the archive that corresponds to your operating
 * Unzip it to the 'extensions' folder of the NetLogo installation that you want to use it with
 * Ensure that the resultant folder is named "gst-video"–__not "gst-video-mac" or "gst-video-windows"__
