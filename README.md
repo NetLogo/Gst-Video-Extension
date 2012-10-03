@@ -6,13 +6,13 @@ __Supported operating systems:__ Mac OS X (unknown versions), Windows (unknown v
 __Supported video formats:__ avi, mp4, mov, flv, ogg<br>
 <b>Unsupported video formats <i>(for now)</i>:</b> wmv, mkv
 
-#Installation From Downloadable Zip File
+#Installation from Zip File Download
 * Download the archive that corresponds to your operating
 * Unzip it to the 'extensions' folder of the NetLogo installation that you want to use it with
 * Ensure that the resultant folder is named "gst-video"–__not "gst-video-mac" or "gst-video-windows"__
 * You should now be all set.  Please feel free to play with the extension by using the 'gst-video-test.nlogo' model file in 'extensions/gst-video/models' folder
 
-#Installation From Source:
+#Installation from Source:
 * Navigate to the directory of your NetLogo installation's 'extensions' folder
   * (varies, i.e. `cd /Applications/NetLogo\ 5.0.2/extensions`)
 * Download the source into the 'extensions' folder of an existing NetLogo installation, and ensure that the folder is named "gst-video" 
