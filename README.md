@@ -1,15 +1,15 @@
 #Project information:
 This project is an alternative video extension for NetLogo.  It utilizes the open source video-processing framework GStreamer for smooth, cross-platform distribution.
 
-__Version:__ 1.0 beta<br>
-__Supported operating systems:__ Mac OS X (unknown versions), Windows (unknown versions)<br>
+__Version:__ 1.0<br>
+__Supported operating systems:__ Mac OS X 10.7+, Windows 7<br>
 __Supported video formats:__ avi, mp4, mov, flv, ogg<br>
-<b>Unsupported video formats <i>(for now)</i>:</b> wmv, mkv
+<b>Unsupported video formats (for now):</b> wmv, mkv
 
 #Installation from Zip File Download
 * Download the archive that corresponds to your operating
 * Unzip it to the 'extensions' folder of the NetLogo installation that you want to use it with
-* Ensure that the resultant folder is named "gst-video"–__not "gst-video-mac" or "gst-video-windows"__
+* Ensure that the resultant folder is named "gst-video"–<b>not</b> "gst-video-mac" or "gst-video-windows"
 * You should now be all set.  Please feel free to play with the extension by using the 'gst-video-test.nlogo' model file in 'extensions/gst-video/models' folder
 
 #Installation from Source:
