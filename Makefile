@@ -37,6 +37,7 @@ GST_JAR=$(GST_NAME).jar
 GST_PACK=$(GST_JAR).pack.gz
 
 JNA_NAME=jna
+JNA_VERSION=3.2.7
 JNA_JAR=$(JNA_NAME).jar
 JNA_PACK=$(JNA_JAR).pack.gz
 
@@ -81,7 +82,7 @@ $(GST_JAR) $(GST_PACK):
 	pack200 --modification-time=latest --effort=9 --strip-debug --no-keep-file-order --unknown-attribute=strip $(GST_PACK) $(GST_JAR)
 
 $(JNA_JAR) $(JNA_PACK):
-	curl -f -s -S $(JAR_REPO)$(JNA_JAR) -o $(JNA_JAR)
+	curl -f -s -S $(JAR_REPO)$(JNA_NAME)-$(JNA_VERSION).jar -o $(JNA_JAR)
 	pack200 --modification-time=latest --effort=9 --strip-debug --no-keep-file-order --unknown-attribute=strip $(JNA_PACK) $(JNA_JAR)
 
 $(PROCESSING_JAR) $(PROCESSING_PACK):
