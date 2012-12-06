@@ -25,3 +25,8 @@ __Supported video formats:__ avi, mp4, mov, flv, ogg<br>
     * If you installed Scala through Homebrew, you can set up this variable by running `export SCALA_HOME=/usr/local/Cellar/scala/<x>/`, where `<x>` is the version number of your Scala installation (likely "2.9.1" or "2.9.2")
 * You should now be all set.  Please feel free to play with the extension by using the 'gst-video-test.nlogo' model file in 'extensions/gst-video/models' folder
 
+## Terms of Use
+
+[![CC0](http://i.creativecommons.org/p/zero/1.0/88x31.png)](http://creativecommons.org/publicdomain/zero/1.0/)
+
+The NetLogo GStreamer video extension is in the public domain.  To the extent possible under law, Uri Wilensky has waived all copyright and related or neighboring rights.
