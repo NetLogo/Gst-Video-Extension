@@ -1,6 +1,7 @@
 *.jar.pack.gz
 *.jar
 /classes
+/processing-lib/classes
 /videos
 /lib
 /video
