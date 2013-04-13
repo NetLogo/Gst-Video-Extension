@@ -143,7 +143,7 @@ trait VideoPrimitiveManager {
     if (value >= min && value <= max)
       balance.set(settingName, value)
     else
-      throw new ExtensionException("invalid %s value: %f (must be within [%f, %f])".format(settingName, value, min, max))
+      throw new ExtensionException("Invalid %s value: %f (must be within [%f, %f])".format(settingName, value, min, max))
   }
 
   object Image extends DefaultReporter {

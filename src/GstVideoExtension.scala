@@ -8,7 +8,7 @@ import prim.{ Camera, Movie }
 class GstVideoExtension extends DefaultClassManager {
 
   override def runOnce(em: ExtensionManager) {
-   	// Video.init(Array("--gst-debug-level=2"))
+    // Video.init(Array("--gst-debug-level=2"))
     Video.init(Array(""))
   }
 
